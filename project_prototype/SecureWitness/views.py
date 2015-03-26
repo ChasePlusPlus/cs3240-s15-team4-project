@@ -10,9 +10,9 @@ from django.contrib.auth.decorators import login_required
 def index(request):
     context = RequestContext(request)
 
-    user_list = User.objects.order_by('?')
-    context_dict = {'users': user_list}
-    return render_to_response('SecureWitness/index.html', context_dict, context)
+    #user_list = User.objects.order_by('?')
+    #context_dict = {'users': user_list}
+    return render_to_response('SecureWitness/index.html', {}, context)
 
 def register(request):
     context = RequestContext(request)

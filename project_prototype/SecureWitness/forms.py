@@ -2,6 +2,11 @@ from django import forms
 from SecureWitness.models import UserProfile
 from django.contrib.auth.models import User
 
+class FileUploadForm(forms.Form):
+	title = forms.CharField()
+	#author = forms.CharField()
+	file = forms.FileField(label = "Select a File") 
+
 class UserForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput())
 

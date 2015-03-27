@@ -30,12 +30,16 @@ class Group(models.Model):
 class File(models.Model):
     #id = models.IntegerField(unique=True) #previously had primary key in here
     title = models.CharField(max_length=300, primary_key=True)
-    author = models.ForeignKey(User)
-    folder = models.ForeignKey(Folder)
+    #author = models.ForeignKey(User, blank=True)
+    #folder = models.ForeignKey(Folder, blank=True)
     #user_perm = models.TextField #String of users permitted to access the file
-    user_perm = models.TextField(default='')
-    group_perm = models.TextField(default='') #String of groups permitted to access the file
-    access_type = models.BooleanField(default=False) #False -> Public file, True -> Private file
+    user_perm = models.TextField(default='', blank=True)
+    group_perm = models.TextField(default='', blank = True) #String of groups permitted to access the file
+    access_type = models.BooleanField(default=False, blank = True) #False -> Public file, True -> Private file
+    file = models.FileField(upload_to='practice/%Y/%m/%d')
+		
+    def __str__(self):
+        return self.title
 
     def __str__(self):
         return self.title

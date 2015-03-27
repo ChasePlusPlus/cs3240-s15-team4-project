@@ -1,0 +1,7 @@
+<form action="{% url 'SecureWitness:upload' %}" method="post" enctype="multipart/form-data">
+{% csrf_token %}
+Report Title: {{form.title}} </br>
+<!--Report Author: {{form.author}} </br>-->
+{{form.file}}
+<input type = "submit" value = "Upload"/>
+</form>

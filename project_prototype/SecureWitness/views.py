@@ -1,11 +1,13 @@
 from django.shortcuts import render, render_to_response
 from SecureWitness.forms import UserForm, UserProfileForm
-from SecureWitness.models import UserProfile
+from SecureWitness.models import UserProfile, File
 from django.contrib.auth.models import User
 from django.http import HttpResponse, HttpResponseRedirect
-from django.template import RequestContext
+from django.template import RequestContext, loader
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.core.urlresolvers import reverse
+from SecureWitness.forms import FileUploadForm
 
 def index(request):
     context = RequestContext(request)
@@ -88,3 +90,23 @@ def user_logout(request):
     logout(request)
     return HttpResponseRedirect('/SecureWitness/')
 
+def uploadView(request):
+    if request.method == 'POST':
+		#form that holds the upload file buttons
+        form = FileUploadForm(request.POST, request.FILES)
+        if form.is_valid():
+			#if the form is valid, put the file where it is supposed to go
+			
+            #new_fileUpload = SampleModel(file = request.FILES['file'])
+            #new_fileUpload.save()
+			
+            new_file = File(title = request.POST['title'], file = request.FILES['file'])
+            new_file.save()
+ 
+            return HttpResponseRedirect(reverse('SecureWitness:upload'))
+    else:
+        form = FileUploadForm()
+ 
+    data = {'form': form}
+	#return render(request, 'polls/upload.html', data)
+    return render_to_response('SecureWitness/upload.html', data, context_instance=RequestContext(request))

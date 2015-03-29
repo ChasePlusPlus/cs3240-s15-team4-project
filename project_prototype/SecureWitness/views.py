@@ -8,14 +8,13 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
 from SecureWitness.forms import FileUploadForm
-from SecureWitness.models import File
 
 def index(request):
     context = RequestContext(request)
 
-    files = File.objects.all()
-    context_dict = {'files': files}
-    return render_to_response('SecureWitness/index.html', context_dict, context)
+    #user_list = User.objects.order_by('?')
+    #context_dict = {'users': user_list}
+    return render_to_response('SecureWitness/index.html', {}, context)
 
 def register(request):
     context = RequestContext(request)

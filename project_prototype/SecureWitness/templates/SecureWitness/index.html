@@ -9,7 +9,18 @@
   <body>
     {% block body_block %}
     <div class="hero-unit">
-      This is the home page.
+      {% if user.is_authenticated %}
+      {% if files %}
+      <ul>
+	{% for file in files %}
+	<li><a href="{{ file.file.url }}">{{ file.title }}</a></li>
+	{% endfor %}
+      </ul>
+      {% else %}
+      <p>No files.</p>
+      {% endif %}
+      {% else %}
+      {% endif %}
 
     </div>
     {% endblock %}

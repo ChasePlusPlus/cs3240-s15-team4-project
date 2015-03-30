@@ -9,6 +9,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
 from SecureWitness.forms import FileUploadForm
 from SecureWitness.models import File
+import datetime
 
 def index(request):
     context = RequestContext(request)
@@ -101,10 +102,13 @@ def uploadView(request):
             #new_fileUpload = SampleModel(file = request.FILES['file'])
             #new_fileUpload.save()
 			
-            new_file = File(title = request.POST['title'], file = request.FILES['file'])
+            new_file = File(title = request.POST['title'], shortDesc = request.POST['shortDesc'], detailsDesc = request.POST['detailsDesc'], dateOfIncident = request.POST['dateOfIncident'], locationOfIncident = request.POST['locationOfIncident'], keywords = request.POST['keywords'], user_perm = request.POST['private'], timestamp = str(datetime.datetime.now()), file = request.FILES['file'])
             new_file.save()
  
-            return HttpResponseRedirect(reverse('SecureWitness:upload'))
+            return HttpResponseRedirect(reverse('SecureWitness:index'))
+        else:
+			#If there is an issue with uploading a file let the user know
+            return HttpResponse("Invalid File Upload details... Please be sure you are filling out the appropriate fields.")
     else:
         form = FileUploadForm()
  

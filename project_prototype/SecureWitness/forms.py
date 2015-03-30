@@ -12,7 +12,7 @@ class FileUploadForm(forms.Form):
     dateOfIncident = forms.CharField(required=False)#these do not need to be populated
     locationOfIncident = forms.CharField(required = False)#these do not need to be populated
     keywords = forms.CharField(required = False)#these do not need to be populated
-    private = forms.BooleanField()
+    user_perm = forms.BooleanField(required = False)
 
 class UserForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput())

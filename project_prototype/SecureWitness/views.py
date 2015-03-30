@@ -102,7 +102,7 @@ def uploadView(request):
             #new_fileUpload = SampleModel(file = request.FILES['file'])
             #new_fileUpload.save()
 			
-            new_file = File(title = request.POST['title'], shortDesc = request.POST['shortDesc'], detailsDesc = request.POST['detailsDesc'], dateOfIncident = request.POST['dateOfIncident'], locationOfIncident = request.POST['locationOfIncident'], keywords = request.POST['keywords'], user_perm = request.POST['private'], timestamp = str(datetime.datetime.now()), file = request.FILES['file'])
+            new_file = File(title = request.POST['title'], shortDesc = request.POST['shortDesc'], detailsDesc = request.POST['detailsDesc'], dateOfIncident = request.POST['dateOfIncident'], locationOfIncident = request.POST['locationOfIncident'], keywords = request.POST['keywords'], user_perm = request.POST.get('user_perm', False), timestamp = str(datetime.datetime.now()), file = request.FILES['file'])
             new_file.save()
  
             return HttpResponseRedirect(reverse('SecureWitness:index'))

@@ -35,8 +35,15 @@ class File(models.Model):
     #user_perm = models.TextField #String of users permitted to access the file
     user_perm = models.TextField(default='', blank=True)
     group_perm = models.TextField(default='', blank = True) #String of groups permitted to access the file
-    access_type = models.BooleanField(default=False, blank = True) #False -> Public file, True -> Private file
+    access_type = models.BooleanField(default=False) #False -> Public file, True -> Private file
     file = models.FileField(upload_to='practice/%Y/%m/%d')
+    timestamp = models.TextField(default='', blank=True)
+    shortDesc = models.TextField(default='', blank=True)
+    detailsDesc = models.TextField(default='', blank=True)
+    dateOfIncident = models.TextField(default='', blank=True, null = True)
+    locationOfIncident = models.TextField(default='', blank=True, null = True)
+    keywords = models.TextField(default='', blank=True, null = True)
+    
 		
     def __str__(self):
         return self.title

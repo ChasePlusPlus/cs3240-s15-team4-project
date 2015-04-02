@@ -8,14 +8,15 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
 from SecureWitness.forms import FileUploadForm
-from SecureWitness.models import File
+from SecureWitness.models import File, Group
 import datetime
 
 def index(request):
     context = RequestContext(request)
 
     files = File.objects.all()
-    context_dict = {'files': files}
+    groups = Group.objects.all()
+    context_dict = {'files': files, 'groups': groups}
     return render_to_response('SecureWitness/index.html', context_dict, context)
 
 def register(request):
@@ -92,6 +93,7 @@ def user_logout(request):
     logout(request)
     return HttpResponseRedirect('/SecureWitness/')
 
+@login_required
 def uploadView(request):
     if request.method == 'POST':
 		#form that holds the upload file buttons
@@ -115,3 +117,27 @@ def uploadView(request):
     data = {'form': form}
 	#return render(request, 'polls/upload.html', data)
     return render_to_response('SecureWitness/upload.html', data, context_instance=RequestContext(request))
+
+@login_required
+def user_portal(request):
+    context = RequestContext(request)
+    return render_to_response('SecureWitness/portal.html', {}, context)
+
+@login_required
+def user_settings(request):
+    context = RequestContext(request)
+    return render_to_response('SecureWitness/settings.html', {}, context)
+
+@login_required
+def group(request, usergroup):
+    context = RequestContext(request)
+    group_list = Group.objects.all()
+    context_dict = {'group_list': group_list}
+    g = Group.objects.get(name=usergroup)
+    context_dict['group'] = g
+    return render_to_response('SecureWitness/group.html', context_dict, context)
+
+def encode_url(str):
+    return str.replace(' ', '_')
+
+

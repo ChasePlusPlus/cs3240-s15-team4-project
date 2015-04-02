@@ -1,0 +1,16 @@
+{% extends 'SecureWitness/base.html' %}
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>SecureWitness</title>
+  </head>
+
+  <body>
+    {% block body_block %}
+    <div class="hero-unit">
+      Group page for {{ group.name }}.
+    </div>
+    {% endblock %}
+  </body>
+</html>

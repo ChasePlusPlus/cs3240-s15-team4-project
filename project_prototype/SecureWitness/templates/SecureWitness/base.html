@@ -33,9 +33,6 @@
               {% endif %}
             </ul>
             <ul class="nav">
-              {% if user.is_authenticated %}
-
-              {% endif %}
             </ul>
           </div>
           <!--/.nav-collapse -->
@@ -47,6 +44,14 @@
         <div class="span3">
           <div class="well sidebar-nav">
             <!--- Empty for the timebeing -->
+	    <ul class="nav nav-list">
+	      <li class="nav-header">List header</li>
+	      {% if user.is_authenticated %}
+	      <li><a href="/SecureWitness/portal/">Portal</a></li>
+	      <li><a href="/SecureWitness/upload/">Upload</a></li>
+	      <li><a href="/SecureWitness/settings/">Settings</a></li>
+              {% endif %}
+	    </ul>
           </div>
           <!--/.well -->
         </div>

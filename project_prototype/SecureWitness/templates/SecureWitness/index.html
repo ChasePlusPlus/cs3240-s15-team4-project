@@ -10,6 +10,13 @@
     {% block body_block %}
     <div class="hero-unit">
       {% if user.is_authenticated %}
+      <div class="input-group">
+	<input type="text" class="form-control" placeholder="Search for...">
+	<span class="input-group-btn">
+          <button class="btn btn-default" type="button">Go!</button>
+	</span>
+      </div><!-- /input-group -->
+      <h2>My Files</h2>
       {% if files %}
       <ul>
 	{% for file in files %}
@@ -19,6 +26,17 @@
       {% else %}
       <p>No files.</p>
       {% endif %}
+      <h2>My Groups</h2>
+      {% if groups %}
+      <ul>
+	{% for group in groups %}
+	<li><a href="/SecureWitness/{{ group.name }}">{{ group.name }}</a></li>
+	{% endfor %}
+      </ul>
+      {% else %}
+      <p>No groups.</p>
+      {% endif %}
+      
       {% else %}
       This is the home page.
       {% endif %}

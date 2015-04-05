@@ -11,6 +11,18 @@
     <div class="hero-unit">
       Group page for {{ group.name }}.
     </div>
+    <div class="container-fluid">
+        {% if group %}
+          <p>Members:</p>
+          <ul>
+	        {% for member in members %} <!-- gets all members in the group -->
+	        <li><a href="/SecureWitness/{{member }}">{{ member }}</a></li>
+        	{% endfor %}
+           </ul>
+        {% else %}
+        <p>No members in this group.</p>
+         {% endif %}
+    </div>
     {% endblock %}
   </body>
 </html>

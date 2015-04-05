@@ -130,11 +130,16 @@ def user_settings(request):
 
 @login_required
 def group(request, usergroup):
+
     context = RequestContext(request)
     group_list = Group.objects.all()
     context_dict = {'group_list': group_list}
     g = Group.objects.get(name=usergroup)
     context_dict['group'] = g
+
+    members = [val for val in g.members.all() if val in g.members.all()]
+    context_dict['members'] = members
+
     return render_to_response('SecureWitness/group.html', context_dict, context)
 
 def encode_url(str):

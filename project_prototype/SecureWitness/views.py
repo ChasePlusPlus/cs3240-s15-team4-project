@@ -105,7 +105,9 @@ def uploadView(request):
             #new_fileUpload.save()
 			
             User.profile = property(lambda u: UserProfile.objects.get_or_create(user=u)[0])
-            new_Report = Report(author = request.user.profile, title = request.POST['title'].rstrip(), shortDesc = request.POST['shortDesc'], detailsDesc = request.POST['detailsDesc'], dateOfIncident = request.POST['dateOfIncident'], locationOfIncident = request.POST['locationOfIncident'], keywords = request.POST['keywords'], user_perm = request.POST.get('user_perm', False), timestamp = str(datetime.datetime.now()), files = request.FILES['file'])
+            titleNoWS = request.POST['title'].rstrip()
+            #formattedTitle = title.replace(' ', '_')
+            new_Report = Report(author = request.user.profile, title = titleNoWS, shortDesc = request.POST['shortDesc'], detailsDesc = request.POST['detailsDesc'], dateOfIncident = request.POST['dateOfIncident'], locationOfIncident = request.POST['locationOfIncident'], keywords = request.POST['keywords'], user_perm = request.POST.get('user_perm', False), timestamp = str(datetime.datetime.now()), files = request.FILES['file'])
             new_Report.save()
  
             #return HttpResponseRedirect(reverse('SecureWitness:report', args=(new_Report.title,)))
@@ -155,7 +157,7 @@ def report(request, selectedReport):
     report_list = Report.objects.all()
     context_dict = {'report_list': report_list}
 	#need to get rid of extra space AND encode url
-    #titleRequest = selectedReport + " "
+    #titleRequest = selectedReport.replace('_', ' ')
     report = Report.objects.filter(title=selectedReport)
     context_dict['report'] = report
 	

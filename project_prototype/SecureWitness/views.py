@@ -14,9 +14,9 @@ import datetime
 def index(request):
     context = RequestContext(request)
 
-    files = File.objects.all()
+    reports = Report.objects.all()
     groups = Group.objects.all()
-    context_dict = {'files': files, 'groups': groups}
+    context_dict = {'reports': reports, 'groups': groups}
     return render_to_response('SecureWitness/index.html', context_dict, context)
 
 def register(request):
@@ -146,4 +146,17 @@ def group(request, usergroup):
 def encode_url(str):
     return str.replace(' ', '_')
 
+def report(request, selectedReport):
+    #print("looking at report")
+    #return HttpResponse ("Looking at report: {0}".format(selectedReport.title))
+    context = RequestContext(request)
+    report_list = Report.objects.all()
+    context_dict = {'report_list': report_list}
+	#need to get rid of extra space AND encode url
+    titleRequest = selectedReport + " "
+    report = Report.objects.filter(title=titleRequest)
+    context_dict['report'] = report
+	
+	
+    return render_to_response('SecureWitness/reportDetails.html', context_dict, context)
 

@@ -16,11 +16,11 @@
           <button class="btn btn-default" type="button">Go!</button>
 	</span>
       </div><!-- /input-group -->
-      <h2>My Files</h2>
-      {% if files %}
+      <h2>My Reports</h2>
+      {% if reports %}
       <ul>
-	{% for file in files %}
-	<li><a href="{{ file.file.url }}">{{ file.title }}</a></li>
+	{% for report in reports %}
+	<li><a href="/SecureWitness/report/{{report.title}}">{{ report.title }}</a></li>
 	{% endfor %}
       </ul>
       {% else %}
@@ -30,7 +30,7 @@
       {% if groups %}
       <ul>
 	{% for group in groups %}
-	<li><a href="/SecureWitness/{{ group.name }}">{{ group.name }}</a></li>
+	<li><a href="/SecureWitness/group/{{ group.name }}">{{ group.name }}</a></li>
 	{% endfor %}
       </ul>
       {% else %}

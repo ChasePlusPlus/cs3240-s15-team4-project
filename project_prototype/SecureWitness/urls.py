@@ -11,5 +11,6 @@ urlpatterns = patterns('',
     url(r'^upload/', views.uploadView, name = 'upload'),
     url(r'^portal/', views.user_portal, name = 'portal'),
     url(r'^settings/', views.user_settings, name = 'settings'),
-    url(r'^(?P<usergroup>\w+)/$', views.group, name='group'),
+    url(r'^group/(?P<usergroup>\w+)/$', views.group, name='group'),
+    url(r'^report/(?P<selectedReport>\w+)/$', views.report, name='report'),
     )+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) #puts in proper folder

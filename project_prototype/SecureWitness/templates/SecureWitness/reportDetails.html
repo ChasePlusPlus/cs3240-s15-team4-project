@@ -1,0 +1,33 @@
+{% extends 'SecureWitness/base.html' %}
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>SecureWitness</title>
+  </head>
+
+  <body>
+    {% block body_block %}
+    {% if report %}
+	
+        <ul>
+        {% for rep in report %}
+		<div class="hero-unit">
+			<h2>{{rep.title}}</h2>
+		</div>
+        	Date: {{rep.timestamp}} </br>
+			Subject: {{rep.shortDesc}} </br>
+			Description: {{rep.detailsDesc}} </br>
+			{% if rep.files %}
+				Files: <a href="{{rep.files}}"> {{rep.files}}</a>
+			{% endif %}
+			
+        {% endfor %}
+    	</ul>
+    {% else %}
+      <p>No files.</p>
+      
+	{% endif %}
+    {% endblock %}
+  </body>
+</html>

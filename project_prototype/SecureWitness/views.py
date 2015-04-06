@@ -105,10 +105,12 @@ def uploadView(request):
             #new_fileUpload.save()
 			
             User.profile = property(lambda u: UserProfile.objects.get_or_create(user=u)[0])
-            new_Report = Report(author = request.user.profile, title = request.POST['title'], shortDesc = request.POST['shortDesc'], detailsDesc = request.POST['detailsDesc'], dateOfIncident = request.POST['dateOfIncident'], locationOfIncident = request.POST['locationOfIncident'], keywords = request.POST['keywords'], user_perm = request.POST.get('user_perm', False), timestamp = str(datetime.datetime.now()), files = request.FILES['file'])
+            new_Report = Report(author = request.user.profile, title = request.POST['title'].rstrip(), shortDesc = request.POST['shortDesc'], detailsDesc = request.POST['detailsDesc'], dateOfIncident = request.POST['dateOfIncident'], locationOfIncident = request.POST['locationOfIncident'], keywords = request.POST['keywords'], user_perm = request.POST.get('user_perm', False), timestamp = str(datetime.datetime.now()), files = request.FILES['file'])
             new_Report.save()
  
+            #return HttpResponseRedirect(reverse('SecureWitness:report', args=(new_Report.title,)))
             return HttpResponseRedirect(reverse('SecureWitness:index'))
+            #render(request, 'SecureWitness/reportDetails.html', {'report': new_Report.title})
         else:
 			#If there is an issue with uploading a file let the user know
             return HttpResponse("Invalid File Upload details... Please be sure you are filling out the appropriate fields.")
@@ -153,8 +155,8 @@ def report(request, selectedReport):
     report_list = Report.objects.all()
     context_dict = {'report_list': report_list}
 	#need to get rid of extra space AND encode url
-    titleRequest = selectedReport + " "
-    report = Report.objects.filter(title=titleRequest)
+    #titleRequest = selectedReport + " "
+    report = Report.objects.filter(title=selectedReport)
     context_dict['report'] = report
 	
 	

@@ -26,17 +26,18 @@ class Group(models.Model):
     def __str__(self):
         return self.name
 
+    
 
-class File(models.Model):
+class Report(models.Model):
     #id = models.IntegerField(unique=True) #previously had primary key in here
-    title = models.CharField(max_length=300, primary_key=True)
-    #author = models.ForeignKey(User, blank=True)
+    title = models.CharField(max_length=300, primary_key=True, default = '')
+    author = models.ForeignKey(UserProfile, blank=True)
     #folder = models.ForeignKey(Folder, blank=True)
     #user_perm = models.TextField #String of users permitted to access the file
     user_perm = models.TextField(default='', blank=True)
     group_perm = models.TextField(default='', blank = True) #String of groups permitted to access the file
     access_type = models.BooleanField(default=False) #False -> Public file, True -> Private file
-    file = models.FileField(upload_to='practice/%Y/%m/%d')
+    files = models.FileField(upload_to='SecureWitness/')
     timestamp = models.TextField(default='', blank=True)
     shortDesc = models.TextField(default='', blank=True)
     detailsDesc = models.TextField(default='', blank=True)
@@ -51,7 +52,9 @@ class File(models.Model):
     def __str__(self):
         return self.title
 
-
+class File(models.Model):
+    report = models.ForeignKey(Report)
+    
 class Key(models.Model):
     file = models.OneToOneField(File, primary_key=True)
     key = models.TextField()

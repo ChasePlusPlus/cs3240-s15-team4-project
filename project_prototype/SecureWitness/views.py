@@ -1,14 +1,14 @@
 from django.shortcuts import render, render_to_response
-from SecureWitness.forms import UserForm, UserProfileForm
-from SecureWitness.models import UserProfile, File
+#from SecureWitness.forms import UserForm, UserProfileForm
+#from SecureWitness.models import UserProfile, File
 from django.contrib.auth.models import User
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template import RequestContext, loader
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
-from SecureWitness.forms import FileUploadForm
-from SecureWitness.models import File, Group
+from SecureWitness.forms import FileUploadForm,UserForm, UserProfileForm
+from SecureWitness.models import File, Group, Report, UserProfile
 import datetime
 
 def index(request):
@@ -104,8 +104,9 @@ def uploadView(request):
             #new_fileUpload = SampleModel(file = request.FILES['file'])
             #new_fileUpload.save()
 			
-            new_file = File(title = request.POST['title'], shortDesc = request.POST['shortDesc'], detailsDesc = request.POST['detailsDesc'], dateOfIncident = request.POST['dateOfIncident'], locationOfIncident = request.POST['locationOfIncident'], keywords = request.POST['keywords'], user_perm = request.POST.get('user_perm', False), timestamp = str(datetime.datetime.now()), file = request.FILES['file'])
-            new_file.save()
+            User.profile = property(lambda u: UserProfile.objects.get_or_create(user=u)[0])
+            new_Report = Report(author = request.user.profile, title = request.POST['title'], shortDesc = request.POST['shortDesc'], detailsDesc = request.POST['detailsDesc'], dateOfIncident = request.POST['dateOfIncident'], locationOfIncident = request.POST['locationOfIncident'], keywords = request.POST['keywords'], user_perm = request.POST.get('user_perm', False), timestamp = str(datetime.datetime.now()), files = request.FILES['file'])
+            new_Report.save()
  
             return HttpResponseRedirect(reverse('SecureWitness:index'))
         else:

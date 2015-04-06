@@ -104,3 +104,5 @@ STATICFILES_DIRS = (
 #Helps determine where to put the uploaded files
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
+
+AUTH_PROFILE_MODULE = "log_viewer.UserProfile"

@@ -126,7 +126,7 @@ def uploadView(request):
 @login_required
 def user_portal(request):
     context = RequestContext(request)
-    return render_to_response('SecureWitness/portal.html', {}, context)
+    return render_to_response('SecureWitness/userportal.html', {}, context)
 
 @login_required
 def user_settings(request):

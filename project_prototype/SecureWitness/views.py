@@ -12,9 +12,11 @@ from SecureWitness.models import File, Group, Report, UserProfile
 import datetime
 
 def index(request):
+    #if admin select all of each
     context = RequestContext(request)
-
-    reports = Report.objects.all()
+    userid = request.user.id
+    reports = Report.objects.filter(authorId_id = userid)
+    #figure out how to know what group they are in
     groups = Group.objects.all()
     context_dict = {'reports': reports, 'groups': groups}
     return render_to_response('SecureWitness/index.html', context_dict, context)
@@ -105,9 +107,11 @@ def uploadView(request):
             #new_fileUpload.save()
 			
             User.profile = property(lambda u: UserProfile.objects.get_or_create(user=u)[0])
+            name = request.user.get_full_name()
             titleNoWS = request.POST['title'].rstrip()
             #formattedTitle = title.replace(' ', '_')
-            new_Report = Report(author = request.user.profile, title = titleNoWS, shortDesc = request.POST['shortDesc'], detailsDesc = request.POST['detailsDesc'], dateOfIncident = request.POST['dateOfIncident'], locationOfIncident = request.POST['locationOfIncident'], keywords = request.POST['keywords'], user_perm = request.POST.get('user_perm', False), timestamp = str(datetime.datetime.now()), files = request.FILES['file'])
+            new_Report = Report(authorId = request.user.profile, authorName = name, title = titleNoWS, shortDesc = request.POST['shortDesc'], detailsDesc = request.POST['detailsDesc'], dateOfIncident = request.POST['dateOfIncident'], locationOfIncident = request.POST['locationOfIncident'], keywords = request.POST['keywords'], user_perm = request.POST.get('user_perm', False), timestamp = str(datetime.datetime.now()), file1 = request.FILES['file1'])
+			#, file2 = request.FILES['file2'], file3 = request.FILES['file3'], file4 = request.FILES['file4'], file5 = request.FILES['file5'])
             new_Report.save()
  
             #return HttpResponseRedirect(reverse('SecureWitness:report', args=(new_Report.title,)))

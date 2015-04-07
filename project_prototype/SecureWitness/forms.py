@@ -6,7 +6,11 @@ from django.forms import widgets
 class FileUploadForm(forms.Form):
     title = forms.CharField()
 	#author = forms.CharField()
-    file = forms.FileField(label = "Select a File")
+    file1 = forms.FileField(label = "Select a File", required = False)
+    file2 = forms.FileField(label = "Select a File", required = False)
+    file3 = forms.FileField(label = "Select a File", required = False)
+    file4 = forms.FileField(label = "Select a File", required = False)
+    file5 = forms.FileField(label = "Select a File", required = False)
     shortDesc = forms.CharField()
     detailsDesc = forms.CharField(widget = forms.Textarea)
     dateOfIncident = forms.CharField(required=False)#these do not need to be populated

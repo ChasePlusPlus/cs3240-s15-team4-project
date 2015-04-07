@@ -36,6 +36,13 @@
       {% else %}
       <p>No groups.</p>
       {% endif %}
+      <h2>Promote To Admin</h2>
+      <form id="admin_user_form" method="post" action="/SecureWitness/" enctype="multipart/form-data">
+	{% csrf_token %}
+	{{ admin_user_form.as_p }}
+
+	<input type="submit" name="submit" value="Promote" />
+      </form>
       
       {% else %}
       This is the home page.

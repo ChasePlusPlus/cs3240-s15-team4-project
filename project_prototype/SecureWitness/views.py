@@ -7,7 +7,7 @@ from django.template import RequestContext, loader
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
-from SecureWitness.forms import FileUploadForm,UserForm, UserProfileForm
+from SecureWitness.forms import FileUploadForm,UserForm, UserProfileForm, ReportUploadForm
 from SecureWitness.models import File, Group, Report, UserProfile
 import datetime
 
@@ -99,7 +99,8 @@ def user_logout(request):
 def uploadView(request):
     if request.method == 'POST':
 		#form that holds the upload file buttons
-        form = FileUploadForm(request.POST, request.FILES)
+        
+        form = ReportUploadForm(request.POST, request.FILES)
         if form.is_valid():
 			#if the form is valid, put the file where it is supposed to go
 			
@@ -110,18 +111,22 @@ def uploadView(request):
             name = request.user.get_full_name()
             titleNoWS = request.POST['title'].rstrip()
             #formattedTitle = title.replace(' ', '_')
-            new_Report = Report(authorId = request.user.profile, authorName = name, title = titleNoWS, shortDesc = request.POST['shortDesc'], detailsDesc = request.POST['detailsDesc'], dateOfIncident = request.POST['dateOfIncident'], locationOfIncident = request.POST['locationOfIncident'], keywords = request.POST['keywords'], user_perm = request.POST.get('user_perm', False), timestamp = str(datetime.datetime.now()), file1 = request.FILES['file1'])
-			#, file2 = request.FILES['file2'], file3 = request.FILES['file3'], file4 = request.FILES['file4'], file5 = request.FILES['file5'])
+            new_Report = Report(authorId = request.user.profile, authorName = name, title = titleNoWS, shortDesc = request.POST['shortDesc'], detailsDesc = request.POST['detailsDesc'], dateOfIncident = request.POST['dateOfIncident'], locationOfIncident = request.POST['locationOfIncident'], keywords = request.POST['keywords'], user_perm = request.POST.get('user_perm', False), timestamp = str(datetime.datetime.now()))
             new_Report.save()
- 
-            #return HttpResponseRedirect(reverse('SecureWitness:report', args=(new_Report.title,)))
-            return HttpResponseRedirect(reverse('SecureWitness:index'))
-            #render(request, 'SecureWitness/reportDetails.html', {'report': new_Report.title})
+
+            if 'submit' in request.POST:			
+                #return HttpResponseRedirect(reverse('SecureWitness:report', args=(new_Report.title,)))
+                return HttpResponseRedirect(reverse('SecureWitness:index'))
+                #render(request, 'SecureWitness/reportDetails.html', {'report': new_Report.title})
+            elif 'upload' in request.POST:
+		        #direct to add files format
+                return HttpResponseRedirect(reverse('SecureWitness:FileUpload', args=(titleNoWS,)))
         else:
 			#If there is an issue with uploading a file let the user know
             return HttpResponse("Invalid File Upload details... Please be sure you are filling out the appropriate fields.")
+        
     else:
-        form = FileUploadForm()
+        form = ReportUploadForm()
  
     data = {'form': form}
 	#return render(request, 'polls/upload.html', data)
@@ -164,7 +169,40 @@ def report(request, selectedReport):
     #titleRequest = selectedReport.replace('_', ' ')
     report = Report.objects.filter(title=selectedReport)
     context_dict['report'] = report
+
+    #get files associated with report
+    files = File.objects.filter(report_id = selectedReport)
+    context_dict['files'] = files
 	
 	
     return render_to_response('SecureWitness/reportDetails.html', context_dict, context)
+
+def FileUpload(request, reportTitle):
+	#return HttpResponse(reportTitle)
+    if request.method == 'POST':
+        #if form is valid get file info and add to the database
+        form = FileUploadForm(request.POST, request.FILES)
+        if form.is_valid():            
+            #return HttpResponse("VALID")
+            reportSelected = Report.objects.get(title = reportTitle)
+            newFile = File(file = request.FILES['file'], report = reportSelected)
+            newFile.save()
+        #if 'done then return to index page
+            if 'done' in request.POST:
+                #return HttpResponse("DONE")
+                return HttpResponseRedirect(reverse('SecureWitness:index'))
+		#if add file pressed then return to file upload page
+            elif 'add' in request.POST:
+                #return HttpResponse("ADD")
+                form = FileUploadForm()
+        else:
+            return HttpResponse("ELSE")
+        
+    else:
+        form = FileUploadForm()
+        
+    data = {'form': form, 'reportTitle': reportTitle}
+	#return render(request, 'polls/upload.html', data)
+    return render_to_response('SecureWitness/FileUpload.html', data, context_instance=RequestContext(request))
+    
 

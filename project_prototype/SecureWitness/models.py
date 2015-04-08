@@ -38,11 +38,6 @@ class Report(models.Model):
     user_perm = models.TextField(default='', blank=True)
     group_perm = models.TextField(default='', blank = True) #String of groups permitted to access the file
     access_type = models.BooleanField(default=False) #False -> Public file, True -> Private file
-    file1 = models.FileField(upload_to='SecureWitness/', blank=True, default = "", null = True)
-    file2 = models.FileField(upload_to='SecureWitness/', blank= True, default = "", null = True)
-    file3 = models.FileField(upload_to='SecureWitness/', blank=True, default = "", null = True)
-    file4 = models.FileField(upload_to='SecureWitness/', blank=True, default = "", null = True)
-    file5 = models.FileField(upload_to='SecureWitness/', blank=True, default = "", null = True)
     timestamp = models.TextField(default='', blank=True)
     shortDesc = models.TextField(default='', blank=True)
     detailsDesc = models.TextField(default='', blank=True)
@@ -58,6 +53,7 @@ class Report(models.Model):
         return self.title
 
 class File(models.Model):
+    file = models.FileField(upload_to='SecureWitness/', blank=True, default = "", null = True)
     report = models.ForeignKey(Report)
     
 class Key(models.Model):

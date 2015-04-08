@@ -36,6 +36,19 @@
       {% else %}
       <p>No groups.</p>
       {% endif %}
+      <h2>Promote To Admin</h2>
+      
+      {% if admin_user_form.queryset.count %}
+      <form id="admin_user_form" method="post" action="/SecureWitness/" enctype="multipart/form-data">
+	{% csrf_token %}
+	{{ admin_user_form.as_p }}
+
+	<input type="submit" name="submit" value="Promote" />
+      </form>
+      Not empty.
+      {% else %}
+      There are no non-admin users to promote.
+      {% endif %}
       
       {% else %}
       This is the home page.

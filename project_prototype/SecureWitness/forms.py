@@ -28,3 +28,8 @@ class UserProfileForm(forms.ModelForm):
     class Meta:
         model = UserProfile
         fields = ('admin_status',)
+
+class AdminUserForm(forms.Form):
+
+    user = forms.ModelChoiceField(queryset=UserProfile.objects.filter(admin_status=False))
+    

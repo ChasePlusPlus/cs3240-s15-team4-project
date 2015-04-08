@@ -7,18 +7,51 @@ from django.template import RequestContext, loader
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
-from SecureWitness.forms import FileUploadForm,UserForm, UserProfileForm, ReportUploadForm
+from SecureWitness.forms import FileUploadForm,UserForm, UserProfileForm, ReportUploadForm, AdminUserForm
 from SecureWitness.models import File, Group, Report, UserProfile
 import datetime
+
+
 
 def index(request):
     #if admin select all of each
     context = RequestContext(request)
-    userid = request.user.id
-    reports = Report.objects.filter(authorId_id = userid)
-    #figure out how to know what group they are in
-    groups = Group.objects.all()
-    context_dict = {'reports': reports, 'groups': groups}
+
+    if request.user.is_authenticated():
+        userID = request.user.id
+        userprof = UserProfile.objects.get(user_id=userID)
+        is_admin = userprof.admin_status
+
+
+        userid = request.user.id
+        reports = Report.objects.filter(authorId_id = userid)
+        #figure out how to know what group they are in
+        groups = Group.objects.all()
+
+        
+        if is_admin:
+            if request.method == 'POST':
+                admin_user_form = AdminUserForm(data=request.POST)
+                if admin_user_form.is_valid:
+                    user = request.POST['user']
+                    user.admin_status = True
+                    
+                else: #form is not valid
+                    print (admin_user_form.errors)
+                
+            else: #request method is not POST
+                admin_user_form = AdminUserForm()
+
+                context_dict = {'reports': reports, 'groups': groups, 'admin_user_form':admin_user_form}
+        
+        else: #user is not admin
+            reports = Report.objects.all()
+            groups = Group.objects.all()
+            context_dict = {'reports': reports, 'groups': groups}
+
+    else:
+        context_dict = {}
+
     return render_to_response('SecureWitness/index.html', context_dict, context)
 
 def register(request):
@@ -74,7 +107,10 @@ def user_login(request):
 
         #See if username/password combo is valid
         user = authenticate(username=username, password=password)
-
+        #userID = user.id
+        #userprof = UserProfile.objects.get(user_id=userID)
+        #useradmin = userprof.admin_status
+        
         if user:
             if user.is_active:
                 login(request, user)

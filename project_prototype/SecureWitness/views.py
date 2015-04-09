@@ -34,14 +34,11 @@ def index(request):
             if request.method == 'POST':
                 admin_user_form = AdminUserForm(data=request.POST)
                 if admin_user_form.is_valid:
-                    user = request.POST['user']
-                    #userNames = userFullName.split()
-                    #firstName = userNames[0]
-                    #lastName = userNames[1]
-                    #user = User.objects.get(first_name = firstName, last_name = firstName)
-                    #userInfo = UserProfile.objects.get(user_id=user.user_ID)
+                    userID = request.POST['user']
+                    user = UserProfile.objects.get(user_id=userID)
                     user.admin_status = True
                     user.save()
+                    admin_user_form = AdminUserForm()
                     
                 else: #form is not valid
                     print (admin_user_form.errors)
@@ -49,7 +46,7 @@ def index(request):
             else: #request method is not POST
                 admin_user_form = AdminUserForm()
 
-                context_dict = {'reports': reports, 'groups': groups, 'admin_user_form':admin_user_form, 'admin_status': is_admin}
+            context_dict = {'reports': reports, 'groups': groups, 'admin_user_form':admin_user_form, 'admin_status': is_admin}
         
         else: #user is not admin
             #reports = Report.objects.filter()

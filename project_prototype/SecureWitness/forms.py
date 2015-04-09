@@ -31,5 +31,5 @@ class UserProfileForm(forms.ModelForm):
 
 class AdminUserForm(forms.Form):
 
-    user = forms.ModelChoiceField(queryset=UserProfile.objects.filter(admin_status=False))
+    user = forms.ModelChoiceField(queryset=UserProfile.objects.filter(admin_status=False), required=False)
     

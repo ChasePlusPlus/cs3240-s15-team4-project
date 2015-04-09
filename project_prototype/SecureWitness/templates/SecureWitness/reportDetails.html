@@ -15,12 +15,10 @@
 		<div class="hero-unit">
 			<h2>{{rep.title}}</h2>
 		</div>
+			Author: {{rep.authorName}} </br>
         	Upload Date: {{rep.timestamp}} </br>
 			Subject: {{rep.shortDesc}} </br>
 			Description: {{rep.detailsDesc}} </br>
-			{% if rep.files %}
-				Files: <a href="{{rep.files}}"> {{rep.files}}</a></br>
-			{% endif %}
 			{% if rep.dateOfIncident %}
 			    Incident Date: {{rep.dateOfIncident}}</br>
 			{% endif %}
@@ -32,9 +30,16 @@
 			{% endif %}
 			
         {% endfor %}
-    	</ul>
+    	
+        {% if files %}
+				Files: 
+				{% for file in files %}
+				    <a href="{{file.file}}"> {{file.file}}</a></br>
+				{% endfor %}
+		{% endif %}
+		</ul>
     {% else %}
-      <p>No files.</p>
+      <p>No report.</p>
       
 	{% endif %}
     {% endblock %}

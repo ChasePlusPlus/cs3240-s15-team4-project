@@ -3,17 +3,19 @@ from SecureWitness.models import UserProfile
 from django.contrib.auth.models import User
 from django.forms import widgets
 
-class FileUploadForm(forms.Form):
+class ReportUploadForm(forms.Form):
     title = forms.CharField()
 	#author = forms.CharField()
-    file = forms.FileField(label = "Select a File")
     shortDesc = forms.CharField()
     detailsDesc = forms.CharField(widget = forms.Textarea)
     dateOfIncident = forms.CharField(required=False)#these do not need to be populated
     locationOfIncident = forms.CharField(required = False)#these do not need to be populated
     keywords = forms.CharField(required = False)#these do not need to be populated
     user_perm = forms.BooleanField(required = False)
-
+    
+class FileUploadForm(forms.Form):
+    file = forms.FileField(label = "Select a File", required = False)
+    
 class UserForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput())
 
@@ -26,3 +28,8 @@ class UserProfileForm(forms.ModelForm):
     class Meta:
         model = UserProfile
         fields = ('admin_status',)
+
+class AdminUserForm(forms.Form):
+
+    user = forms.ModelChoiceField(queryset=UserProfile.objects.filter(admin_status=False))
+    

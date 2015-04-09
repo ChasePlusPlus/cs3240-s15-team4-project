@@ -40,13 +40,13 @@ class Request(models.Model):
 class Report(models.Model):
     #id = models.IntegerField(unique=True) #previously had primary key in here
     title = models.CharField(max_length=300, primary_key=True, default = '')
-    author = models.ForeignKey(UserProfile, blank=True)
+    authorId = models.ForeignKey(UserProfile, blank=True)
+    authorName = models.CharField(max_length = 30, default = '', blank = True)
     #folder = models.ForeignKey(Folder, blank=True)
     #user_perm = models.TextField #String of users permitted to access the file
     user_perm = models.TextField(default='', blank=True)
     group_perm = models.TextField(default='', blank = True) #String of groups permitted to access the file
     access_type = models.BooleanField(default=False) #False -> Public file, True -> Private file
-    files = models.FileField(upload_to='SecureWitness/')
     timestamp = models.TextField(default='', blank=True)
     shortDesc = models.TextField(default='', blank=True)
     detailsDesc = models.TextField(default='', blank=True)
@@ -62,6 +62,7 @@ class Report(models.Model):
         return self.title
 
 class File(models.Model):
+    file = models.FileField(upload_to='SecureWitness/', blank=True, default = "", null = True)
     report = models.ForeignKey(Report)
     
 class Key(models.Model):

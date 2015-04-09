@@ -7,16 +7,51 @@ from django.template import RequestContext, loader
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
-from SecureWitness.forms import FileUploadForm,UserForm, UserProfileForm
+from SecureWitness.forms import FileUploadForm,UserForm, UserProfileForm, ReportUploadForm, AdminUserForm
 from SecureWitness.models import File, Group, Report, UserProfile
 import datetime
 
+
+
 def index(request):
+    #if admin select all of each
     context = RequestContext(request)
 
-    reports = Report.objects.all()
-    groups = Group.objects.all()
-    context_dict = {'reports': reports, 'groups': groups}
+    if request.user.is_authenticated():
+        userID = request.user.id
+        userprof = UserProfile.objects.get(user_id=userID)
+        is_admin = userprof.admin_status
+
+
+        userid = request.user.id
+        reports = Report.objects.filter(authorId_id = userid)
+        #figure out how to know what group they are in
+        groups = Group.objects.all()
+
+        
+        if is_admin:
+            if request.method == 'POST':
+                admin_user_form = AdminUserForm(data=request.POST)
+                if admin_user_form.is_valid:
+                    user = request.POST['user']
+                    user.admin_status = True
+                    
+                else: #form is not valid
+                    print (admin_user_form.errors)
+                
+            else: #request method is not POST
+                admin_user_form = AdminUserForm()
+
+                context_dict = {'reports': reports, 'groups': groups, 'admin_user_form':admin_user_form}
+        
+        else: #user is not admin
+            reports = Report.objects.all()
+            groups = Group.objects.all()
+            context_dict = {'reports': reports, 'groups': groups}
+
+    else:
+        context_dict = {}
+
     return render_to_response('SecureWitness/index.html', context_dict, context)
 
 def register(request):
@@ -72,7 +107,10 @@ def user_login(request):
 
         #See if username/password combo is valid
         user = authenticate(username=username, password=password)
-
+        #userID = user.id
+        #userprof = UserProfile.objects.get(user_id=userID)
+        #useradmin = userprof.admin_status
+        
         if user:
             if user.is_active:
                 login(request, user)
@@ -97,7 +135,8 @@ def user_logout(request):
 def uploadView(request):
     if request.method == 'POST':
 		#form that holds the upload file buttons
-        form = FileUploadForm(request.POST, request.FILES)
+        
+        form = ReportUploadForm(request.POST, request.FILES)
         if form.is_valid():
 			#if the form is valid, put the file where it is supposed to go
 			
@@ -105,19 +144,25 @@ def uploadView(request):
             #new_fileUpload.save()
 			
             User.profile = property(lambda u: UserProfile.objects.get_or_create(user=u)[0])
+            name = request.user.get_full_name()
             titleNoWS = request.POST['title'].rstrip()
-            #formattedTitle = title.replace(' ', '_')
-            new_Report = Report(author = request.user.profile, title = titleNoWS, shortDesc = request.POST['shortDesc'], detailsDesc = request.POST['detailsDesc'], dateOfIncident = request.POST['dateOfIncident'], locationOfIncident = request.POST['locationOfIncident'], keywords = request.POST['keywords'], user_perm = request.POST.get('user_perm', False), timestamp = str(datetime.datetime.now()), files = request.FILES['file'])
+            formattedTitle = titleNoWS.replace(' ', '_')
+            new_Report = Report(authorId = request.user.profile, authorName = name, title = titleNoWS, shortDesc = request.POST['shortDesc'], detailsDesc = request.POST['detailsDesc'], dateOfIncident = request.POST['dateOfIncident'], locationOfIncident = request.POST['locationOfIncident'], keywords = request.POST['keywords'], user_perm = request.POST.get('user_perm', False), timestamp = str(datetime.datetime.now()))
             new_Report.save()
- 
-            #return HttpResponseRedirect(reverse('SecureWitness:report', args=(new_Report.title,)))
-            return HttpResponseRedirect(reverse('SecureWitness:index'))
-            #render(request, 'SecureWitness/reportDetails.html', {'report': new_Report.title})
+
+            if 'submit' in request.POST:			
+                #return HttpResponseRedirect(reverse('SecureWitness:report', args=(new_Report.title,)))
+                return HttpResponseRedirect(reverse('SecureWitness:index'))
+                #render(request, 'SecureWitness/reportDetails.html', {'report': new_Report.title})
+            elif 'upload' in request.POST:
+		        #direct to add files format
+                return HttpResponseRedirect(reverse('SecureWitness:FileUpload', args=(formattedTitle,)))
         else:
 			#If there is an issue with uploading a file let the user know
             return HttpResponse("Invalid File Upload details... Please be sure you are filling out the appropriate fields.")
+        
     else:
-        form = FileUploadForm()
+        form = ReportUploadForm()
  
     data = {'form': form}
 	#return render(request, 'polls/upload.html', data)
@@ -158,9 +203,45 @@ def report(request, selectedReport):
     context_dict = {'report_list': report_list}
 	#need to get rid of extra space AND encode url
     #titleRequest = selectedReport.replace('_', ' ')
-    report = Report.objects.filter(title=selectedReport)
+	#context_dict['titleVal'] = titleRequest
+    selectedReport2 = selectedReport.replace("_"," ")
+    report = Report.objects.filter(title=selectedReport2)
     context_dict['report'] = report
+
+    #get files associated with report
+    files = File.objects.filter(report_id = selectedReport2)
+    context_dict['files'] = files
 	
 	
     return render_to_response('SecureWitness/reportDetails.html', context_dict, context)
+
+def FileUpload(request, reportTitle):
+	#return HttpResponse(reportTitle)
+    if request.method == 'POST':
+        #if form is valid get file info and add to the database
+        form = FileUploadForm(request.POST, request.FILES)
+        if form.is_valid():            
+            #return HttpResponse("VALID")
+            reportTitle2 = reportTitle.replace("_", " ")
+            reportSelected = Report.objects.get(title = reportTitle2)
+            newFile = File(file = request.FILES['file'], report = reportSelected)
+            newFile.save()
+        #if 'done then return to index page
+            if 'done' in request.POST:
+                #return HttpResponse("DONE")
+                return HttpResponseRedirect(reverse('SecureWitness:index'))
+		#if add file pressed then return to file upload page
+            elif 'add' in request.POST:
+                #return HttpResponse("ADD")
+                form = FileUploadForm()
+        else:
+            return HttpResponse("ELSE")
+        
+    else:
+        form = FileUploadForm()
+        
+    data = {'form': form, 'reportTitle': reportTitle}
+	#return render(request, 'polls/upload.html', data)
+    return render_to_response('SecureWitness/FileUpload.html', data, context_instance=RequestContext(request))
+    
 

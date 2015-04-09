@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+#from django.contrib.auth.models import Group
 # Create your models here.
 
 
@@ -20,13 +21,21 @@ class Folder(models.Model):
 
 
 class Group(models.Model):
+    #group = models.OneToOneField(Group)
     name = models.CharField(max_length=200, primary_key=True)
     members = models.ManyToManyField(User)
 
     def __str__(self):
         return self.name
 
-    
+
+class Request(models.Model):
+    requester = models.CharField(max_length=100, default= '')
+    group = models.ForeignKey(Group)
+
+    def __str__(self):
+        return self.name + " is requesting access."
+
 
 class Report(models.Model):
     #id = models.IntegerField(unique=True) #previously had primary key in here

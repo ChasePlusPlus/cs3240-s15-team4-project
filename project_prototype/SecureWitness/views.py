@@ -146,7 +146,7 @@ def uploadView(request):
             User.profile = property(lambda u: UserProfile.objects.get_or_create(user=u)[0])
             name = request.user.get_full_name()
             titleNoWS = request.POST['title'].rstrip()
-            #formattedTitle = title.replace(' ', '_')
+            formattedTitle = titleNoWS.replace(' ', '_')
             new_Report = Report(authorId = request.user.profile, authorName = name, title = titleNoWS, shortDesc = request.POST['shortDesc'], detailsDesc = request.POST['detailsDesc'], dateOfIncident = request.POST['dateOfIncident'], locationOfIncident = request.POST['locationOfIncident'], keywords = request.POST['keywords'], user_perm = request.POST.get('user_perm', False), timestamp = str(datetime.datetime.now()))
             new_Report.save()
 
@@ -156,7 +156,7 @@ def uploadView(request):
                 #render(request, 'SecureWitness/reportDetails.html', {'report': new_Report.title})
             elif 'upload' in request.POST:
 		        #direct to add files format
-                return HttpResponseRedirect(reverse('SecureWitness:FileUpload', args=(titleNoWS,)))
+                return HttpResponseRedirect(reverse('SecureWitness:FileUpload', args=(formattedTitle,)))
         else:
 			#If there is an issue with uploading a file let the user know
             return HttpResponse("Invalid File Upload details... Please be sure you are filling out the appropriate fields.")
@@ -203,11 +203,13 @@ def report(request, selectedReport):
     context_dict = {'report_list': report_list}
 	#need to get rid of extra space AND encode url
     #titleRequest = selectedReport.replace('_', ' ')
-    report = Report.objects.filter(title=selectedReport)
+	#context_dict['titleVal'] = titleRequest
+    selectedReport2 = selectedReport.replace("_"," ")
+    report = Report.objects.filter(title=selectedReport2)
     context_dict['report'] = report
 
     #get files associated with report
-    files = File.objects.filter(report_id = selectedReport)
+    files = File.objects.filter(report_id = selectedReport2)
     context_dict['files'] = files
 	
 	
@@ -220,7 +222,8 @@ def FileUpload(request, reportTitle):
         form = FileUploadForm(request.POST, request.FILES)
         if form.is_valid():            
             #return HttpResponse("VALID")
-            reportSelected = Report.objects.get(title = reportTitle)
+            reportTitle2 = reportTitle.replace("_", " ")
+            reportSelected = Report.objects.get(title = reportTitle2)
             newFile = File(file = request.FILES['file'], report = reportSelected)
             newFile.save()
         #if 'done then return to index page

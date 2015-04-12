@@ -7,6 +7,7 @@
   </head>
 
   <body>
+  <!--<form action="{% url 'SecureWitness:group' %}" method="post">-->
     {% block body_block %}
     <div class="hero-unit">
       Group page for {{ group.name }}.
@@ -16,13 +17,41 @@
           <p>Members:</p>
           <ul>
 	        {% for member in members %} <!-- gets all members in the group -->
-	        <li><a href="/SecureWitness/{{member }}">{{ member }}</a></li>
+	        <li><a href="/SecureWitness/userportal/{{ member }}">{{ member }}</a></li>
         	{% endfor %}
            </ul>
+
+            {% if loggedin == 1 %}
+                <p>Requests:</p>
+             <!--{%  for request in requests %}
+             <li><a href="/SecureWitness/{{request }}">{{ request }}</a></li>
+                 <li> <input type = "submit" name = "requestChoice" value = {{ request }}> </li>
+        	    {% endfor %}-->
+                {% for request in requests %}
+                <li><a href="/SecureWitness/userportal/{{ request.requester }}">{{ request.requester }}</a></li>
+                {% endfor %}
+                <!--<form action="{% url 'SecureWitness:group' group.name %}" method="post">
+                {% csrf_token %}
+                {% for request in requests %}
+                    <input type="radio" name="request" id="request{{ forloop.counter }}" value="{{ request}}" />
+                    <label for="request{{ forloop.counter }}">{{ request }}</label><br />
+                {% endfor %}
+                <input type="submit" value="Approve Request" />
+                </form>-->
+
+            {% else %}
+                {% if request_already_made %}
+                    You have requested access to this group.
+                {% else %}
+                    <a href="/SecureWitness/group/{{ group.name }}/request">Request to Join {{ group.name }}</a>
+                {% endif %}
+            {% endif %}
         {% else %}
         <p>No members in this group.</p>
          {% endif %}
+
     </div>
     {% endblock %}
+  <!--</form>-->
   </body>
 </html>

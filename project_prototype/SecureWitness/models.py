@@ -34,7 +34,7 @@ class Request(models.Model):
     group = models.ForeignKey(Group)
 
     def __str__(self):
-        return self.name + " is requesting access."
+        return str(self.group)
 
 
 class Report(models.Model):

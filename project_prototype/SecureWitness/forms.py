@@ -1,7 +1,23 @@
 from django import forms
-from SecureWitness.models import UserProfile
+from SecureWitness.models import UserProfile, Request
 from django.contrib.auth.models import User
 from django.forms import widgets
+
+
+class RequestAccessForm(forms.Form):
+    #request_access = forms.BooleanField(required=True)
+    class Meta:
+        model = Request
+        fields = ('requester', 'group')
+
+
+class GrantAccessForm(forms.Form):
+
+    def __init__(self, user, *args, **kwargs):
+        super(GrantAccessForm, self).__init__(*args, **kwargs)
+        self.fields['group_requests'] = forms.ChoiceField(
+            choices=[(o.group, str(o)) for o in Request.objects.filter(requester=user)])
+
 
 class ReportUploadForm(forms.Form):
     title = forms.CharField()

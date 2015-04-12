@@ -1,0 +1,40 @@
+{% extends 'SecureWitness/base.html' %}
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Make Request to Group</title>
+  </head>
+
+  <body>
+    {% block body_block %}
+    <div class="hero-unit">
+      <h1>Request access to {{ group.name }}</h1>
+
+      <!-- registered variable used in view -->
+      {% if requested %}
+      <strong>Your request has been made!</strong>
+      <a href="/SecureWitness/group/{{ group.name }}">Return to the group page.</a><br />
+      {% else %}
+
+      <form id="request_form" method="post" action="/SecureWitness/group/{{ group.name }}/request/"
+	    enctype="multipart/form-data">
+	<!-- enctype must be multipart/form-data when users to upload files
+	     from form -->
+
+
+	{% csrf_token %}
+
+	<!-- as_p method wraps each element in a paragraph element.
+	     Each element appears on a new line. -->
+	{{ request_form.as_p }}
+
+	<input type="submit" name="submit" value="Make Request" />
+      </form>
+      {% endif %}
+
+    </div>
+    {% endblock %}
+  </body>
+</html>
+

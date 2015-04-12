@@ -1,4 +1,4 @@
-from SecureWitness.models import File, UserProfile, Group, Key, Folder
+from SecureWitness.models import File, UserProfile, Group, Key, Folder, Request
 from django.contrib import admin
 
 # Register your models here.
@@ -25,8 +25,13 @@ class FolderAdmin(admin.ModelAdmin):
     pass
 
 
+class RequestAdmin(admin.ModelAdmin):
+    pass
+
+
 admin.site.register(File, FileAdmin)
 admin.site.register(Folder, FolderAdmin)
 admin.site.register(Key, KeyAdmin)
 admin.site.register(Group, GroupAdmin)
 admin.site.register(UserProfile, UserAdmin)
+admin.site.register(Request, RequestAdmin)

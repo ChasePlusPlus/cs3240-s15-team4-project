@@ -1,16 +1,19 @@
-from django.shortcuts import render, render_to_response
+from django.shortcuts import render, render_to_response, get_object_or_404
 #from SecureWitness.forms import UserForm, UserProfileForm
 #from SecureWitness.models import UserProfile, File
+from django import forms
 from django.contrib.auth.models import User
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template import RequestContext, loader
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
-from SecureWitness.forms import FileUploadForm,UserForm, UserProfileForm, ReportUploadForm, AdminUserForm
-from SecureWitness.models import File, Group, Report, UserProfile
+from SecureWitness.forms import FileUploadForm,UserForm, UserProfileForm, ReportUploadForm, AdminUserForm, RequestAccessForm, GrantAccessForm
+from SecureWitness.models import File, Group, Report, UserProfile, Request
 import datetime
 
+
+#class RequestForm(forms.Form):
 
 
 def index(request):
@@ -113,6 +116,7 @@ def user_login(request):
         
         if user:
             if user.is_active:
+                request.session['currentuser'] = username
                 login(request, user)
                 return HttpResponseRedirect('/SecureWitness/')
             else:
@@ -168,27 +172,147 @@ def uploadView(request):
 	#return render(request, 'polls/upload.html', data)
     return render_to_response('SecureWitness/upload.html', data, context_instance=RequestContext(request))
 
-@login_required
-def user_portal(request):
-    context = RequestContext(request)
-    return render_to_response('SecureWitness/userportal.html', {}, context)
 
 @login_required
 def user_settings(request):
     context = RequestContext(request)
     return render_to_response('SecureWitness/settings.html', {}, context)
 
-@login_required
-def group(request, usergroup):
 
+@login_required
+def user_portal(request, curr_user):
+    context = RequestContext(request)
+    context_dict = {'curr_user': curr_user}
+    granted = False
+    if request.method == 'POST':
+        grant_form = GrantAccessForm(curr_user, data=request.POST)
+        if grant_form.is_valid():
+            selection = grant_form.cleaned_data['group_requests']  #gets selected option
+            add_user = User.objects.get(username=curr_user)
+            group = Group.objects.get(name=selection)
+            context_dict['group'] = group
+            #context_dict['print'] =add_user
+            group.members.add(add_user)   #adding user to group requested works!
+            group.save()
+            #now to delete the request
+            delete_request = Request.objects.get(requester=curr_user, group=group)
+            delete_request.delete()
+
+            granted = True
+        else:
+            print(grant_form.errors)
+    else:
+        grant_form = GrantAccessForm(curr_user)
+    context_dict['granted'] = granted
+    context_dict['grant_form'] = grant_form
+    return render_to_response('SecureWitness/userportal.html', context_dict, context)
+
+
+@login_required
+def request_access(request, usergroup):
     context = RequestContext(request)
     group_list = Group.objects.all()
     context_dict = {'group_list': group_list}
     g = Group.objects.get(name=usergroup)
     context_dict['group'] = g
 
+    requested = False
+
+    #If HTTP POST, interested in processing form data
+    if request.method == 'POST':
+        #getting data for the only purpose of validation
+        request_form = RequestAccessForm(data=request.POST)
+        #validation
+        if request_form.is_valid():
+            #if request_form.request_access == True:
+            new_request = Request(requester = request.session["currentuser"], group = g)
+            #request_list = Request.objects.all()
+            #requests = [val for val in request_list.all() if val.group == g]
+            #if request.session["currentuser"] not in requests:
+            new_request.save()
+
+            requested = True
+
+        else:
+            print(request_form.errors)
+    #Not HTTP POST, so render form using two ModelForm instances
+    #Forms will be blank for user input
+    else:
+        request_form = RequestAccessForm()
+
+    return render_to_response('SecureWitness/request.html',{'group': g, 'request_form': request_form, 'requested': requested},context)
+
+def grant_access(request, curr_user):
+    pass
+
+@login_required
+def group(request, usergroup):
+    authorId = request.user #gets logged in user
+
+    context = RequestContext(request)
+    group_list = Group.objects.all()
+    context_dict = {'group_list': group_list}
+    g = Group.objects.get(name=usergroup)
+    context_dict['group'] = g
     members = [val for val in g.members.all() if val in g.members.all()]
+
+    if authorId in members:
+        context_dict['loggedin'] = 1 #if logged in user is in the group
+    else:
+        context_dict['loggedin'] = 0 #if logged in user is not in the group
+
     context_dict['members'] = members
+
+    request_list = Request.objects.all()
+    requests = [val for val in request_list.all() if val.group == g]
+    context_dict['requests'] = requests
+    #check if the user had already made a request to join the group
+    #CHECKING WORKS! if True, won't prompt user to make more requests
+    request_already_made = False
+    for r in request_list.all():
+        if r.requester == request.session["currentuser"] and r.group == g:
+            request_already_made = True
+    context_dict['request_already_made'] = request_already_made
+    #/end check
+
+    if request.method == 'POST':
+        #getting data for the only purpose of validation
+        request_form = RequestAccessForm(data=request.POST)
+        #validation
+        if request_form.is_valid():
+            new_request = Request(requester = request.session["currentuser"], group = g)
+            new_request.save()
+            requested = True
+        else:
+            print(request_form.errors)
+    else:
+        request_form = RequestAccessForm()
+
+    try:
+        selected_request = requests[request.POST['choice']]
+    except (KeyError, Request.DoesNotExist):
+        # Redisplay the question voting form.
+        return render(request, 'SecureWitness/group.html', context_dict)
+    else:
+        selected_request.requester = "ITWORKED"
+        selected_request.save()
+        # Always return an HttpResponseRedirect after successfully dealing
+        # with POST data. This prevents data from being posted twice if a
+        # user hits the Back button.
+        #return render(request, 'SecureWitness/group/'+usergroup, context_dict)
+        return HttpResponseRedirect(reverse('SecureWitness:group'))
+
+    #request_list = Request.objects.all()
+    #requests = [val for val in request_list.all() if val.group == g]
+    #context_dict['requests'] = requests
+
+    #context_dict = {'request_list': request_list}
+    #r = Request.objects.get(group=usergroup)
+    #context_dict['request'] = r
+    #requests = [val for val in r.requester.all() if val in r.requester.all()]
+
+    #prints out all requests that have been made to the group  #TODO: change Request model charfield to foreignkey with user, make form in html group to ask for access
+
 
     return render_to_response('SecureWitness/group.html', context_dict, context)
 

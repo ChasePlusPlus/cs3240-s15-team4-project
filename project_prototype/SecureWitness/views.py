@@ -185,28 +185,40 @@ def user_settings(request):
 
 @login_required
 def user_portal(request, curr_user):
+    #curr_user is the user associaetd with the userportal we're currently on
+    #use request.session["currentuser"] to get the currently logged in user
     context = RequestContext(request)
     context_dict = {'curr_user': curr_user}
     granted = False
+    no_auth = False
     if request.method == 'POST':
         grant_form = GrantAccessForm(curr_user, data=request.POST)
         if grant_form.is_valid():
             selection = grant_form.cleaned_data['group_requests']  #gets selected option
             add_user = User.objects.get(username=curr_user)
             group = Group.objects.get(name=selection)
-            context_dict['group'] = group
-            #context_dict['print'] =add_user
-            group.members.add(add_user)   #adding user to group requested works!
-            group.save()
-            #now to delete the request
-            delete_request = Request.objects.get(requester=curr_user, group=group)
-            delete_request.delete()
-
+            members = [g.username for g in group.members.all()]
             granted = True
+
+            if request.session["currentuser"] in members:
+                #validation to check if the current user has the authority to grant the access request
+                context_dict['group'] = group
+                #context_dict['print'] =add_user
+                group.members.add(add_user)   #adding user to group requested works!
+                group.save()
+                #now to delete the request
+                delete_request = Request.objects.get(requester=curr_user, group=group)
+                delete_request.delete()
+
+                context_dict['no_auth'] = no_auth
+            else:
+                no_auth = True
+                context_dict['no_auth'] = no_auth
         else:
             print(grant_form.errors)
     else:
         grant_form = GrantAccessForm(curr_user)
+    #context_dict['no_auth'] = False
     context_dict['granted'] = granted
     context_dict['grant_form'] = grant_form
     return render_to_response('SecureWitness/userportal.html', context_dict, context)

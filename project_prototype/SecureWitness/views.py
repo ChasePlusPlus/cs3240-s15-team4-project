@@ -22,15 +22,14 @@ def index(request):
     context = RequestContext(request)
 
     if request.user.is_authenticated():
-        userID = request.user.id
-        userprof = UserProfile.objects.get(user_id=userID)
-        is_admin = userprof.admin_status
-
-
         userid = request.user.id
-        reports = Report.objects.filter(authorId_id = userid)
+        #reports = Report.objects.filter(authorId_id = userid)
+        userprof = UserProfile.objects.get(user_id = userid)
+        is_admin = userprof.admin_status
         #figure out how to know what group they are in
-        groups = Group.objects.all()
+        mygroups = [val for val in Group.objects.all() if userid in val.members.all()]
+        reports_list = Report.objects.all()
+        reports = [val for val in reports_list.all() if val.authorId == userprof]
 
         
         if is_admin:
@@ -48,13 +47,14 @@ def index(request):
                 
             else: #request method is not POST
                 admin_user_form = AdminUserForm()
+            all_reports = Report.objects.all()
+            all_groups = Group.objects.all()
 
-            context_dict = {'reports': reports, 'groups': groups, 'admin_user_form':admin_user_form, 'admin_status': is_admin}
+            context_dict = {'all_groups': all_groups, 'all_reports': all_reports, 'reports': reports, 'groups': mygroups, 'admin_user_form':admin_user_form, 'admin_status': is_admin}
         
         else: #user is not admin
-            #reports = Report.objects.filter()
-            groups = Group.objects.all()
-            context_dict = {'reports': reports, 'groups': groups}
+            request_groups = [val for val in Group.objects.all() if userid not in val.members.all()]
+            context_dict = {'reports': reports, 'groups': mygroups, 'request_groups': request_groups}
 
     else:
         context_dict = {}

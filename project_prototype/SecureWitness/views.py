@@ -18,6 +18,7 @@ import datetime
 
 
 def index(request):
+#need something if not logged in redirect to login page
     #if admin select all of each
     context = RequestContext(request)
 
@@ -30,7 +31,9 @@ def index(request):
         userid = request.user.id
         reports = Report.objects.filter(authorId_id = userid)
         #figure out how to know what group they are in
-        groups = Group.objects.all()
+        
+		#selects all the groups that the user is in
+        groups = Group.members.through.objects.filter(user_id = userid)
 
         
         if is_admin:

@@ -10,6 +10,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
 from SecureWitness.forms import FileUploadForm,UserForm, UserProfileForm, ReportUploadForm, AdminUserForm, RequestAccessForm, GrantAccessForm
 from SecureWitness.models import File, Group, Report, UserProfile, Request
+
 import datetime
 
 
@@ -36,8 +37,11 @@ def index(request):
             if request.method == 'POST':
                 admin_user_form = AdminUserForm(data=request.POST)
                 if admin_user_form.is_valid:
-                    user = request.POST['user']
+                    userID = request.POST['user']
+                    user = UserProfile.objects.get(user_id=userID)
                     user.admin_status = True
+                    user.save()
+                    admin_user_form = AdminUserForm()
                     
                 else: #form is not valid
                     print (admin_user_form.errors)
@@ -45,10 +49,10 @@ def index(request):
             else: #request method is not POST
                 admin_user_form = AdminUserForm()
 
-                context_dict = {'reports': reports, 'groups': groups, 'admin_user_form':admin_user_form}
+            context_dict = {'reports': reports, 'groups': groups, 'admin_user_form':admin_user_form, 'admin_status': is_admin}
         
         else: #user is not admin
-            reports = Report.objects.all()
+            #reports = Report.objects.filter()
             groups = Group.objects.all()
             context_dict = {'reports': reports, 'groups': groups}
 

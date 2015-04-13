@@ -15,6 +15,7 @@ class UserProfile(models.Model):
 class Folder(models.Model):
     #id = models.IntegerField(primary_key=True, unique=True)
     name = models.CharField(max_length=100)
+    #reports = models.ManyToManyField(Report)
 
     def __str__(self):
         return self.name
@@ -42,7 +43,7 @@ class Report(models.Model):
     title = models.CharField(max_length=300, primary_key=True, default = '')
     authorId = models.ForeignKey(UserProfile, blank=True)
     authorName = models.CharField(max_length = 30, default = '', blank = True)
-    #folder = models.ForeignKey(Folder, blank=True)
+    folder = models.ForeignKey(Folder, blank=True)
     #user_perm = models.TextField #String of users permitted to access the file
     user_perm = models.TextField(default='', blank=True)
     group_perm = models.ManyToManyField(Group) #String of groups permitted to access the file

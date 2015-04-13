@@ -53,7 +53,7 @@ def index(request):
         
 
        	#get all the groups saved that the member is not a part of	
-        notMyGroups = Group.members.through.objects.exclude(user_id = userid).values_list('group_id', flat=True)
+        notMyGroups = Group.members.through.objects.exclude(user_id = userid).values_list('group_id', flat=True).distinct()
         request_groups = []
 		#check to make sure that the groups chosen are not those the user is in (the way the table is set up is every user has own row with table name
 		#meaning that groups with the user can still be chosen when another user in same group)
@@ -217,6 +217,7 @@ def user_settings(request):
 
 @login_required
 def user_portal(request, curr_user):
+    #return HttpResponse(curr_user)
     #curr_user is the user associaetd with the userportal we're currently on
     #use request.session["currentuser"] to get the currently logged in user
     context = RequestContext(request)
@@ -232,20 +233,20 @@ def user_portal(request, curr_user):
 
             context_dict['group'] = group
             #context_dict['print'] =add_user
-            group.members.add(add_user)   #adding user to group requested works!
-            group.save()
+            #group.members.add(add_user)   #adding user to group requested works!
+            #group.save()
 			#should we put here that the reports of that user all are then given permission to group
 			
             #now to delete the request
-            delete_request = Request.objects.get(requester=curr_user, group=group)
-            delete_request.delete()
+            #delete_request = Request.objects.get(requester=curr_user, group=group)
+            #delete_request.delete()
 
 
             members = [g.username for g in group.members.all()]
 
             granted = True
 
-            if request.session["currentuser"] in members:
+            if request.user.username in members:
                 #validation to check if the current user has the authority to grant the access request
                 context_dict['group'] = group
                 #context_dict['print'] =add_user
@@ -286,7 +287,7 @@ def request_access(request, usergroup):
         #validation
         if request_form.is_valid():
             #if request_form.request_access == True:
-            new_request = Request(requester = request.session["currentuser"], group = g)
+            new_request = Request(requester = request.user.username, group = g)
             #request_list = Request.objects.all()
             #requests = [val for val in request_list.all() if val.group == g]
             #if request.session["currentuser"] not in requests:
@@ -331,7 +332,7 @@ def group(request, usergroup):
     #CHECKING WORKS! if True, won't prompt user to make more requests
     request_already_made = False
     for r in request_list.all():
-        if r.requester == request.session["currentuser"] and r.group == g:
+        if r.requester == request.user.username and r.group == g:
             request_already_made = True
     context_dict['request_already_made'] = request_already_made
     #/end check

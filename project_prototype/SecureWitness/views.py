@@ -21,19 +21,24 @@ def index(request):
 #need something if not logged in redirect to login page
     #if admin select all of each
     context = RequestContext(request)
-
+    HttpResponse(request.user.id)
     if request.user.is_authenticated():
         userID = request.user.id
         userprof = UserProfile.objects.get(user_id=userID)
         is_admin = userprof.admin_status
+		#NOTE: user profile ID can be different from request.user.id because if add superuser but don't create user profile
+        authId = userprof.id
 
 
         userid = request.user.id
-        reports = Report.objects.filter(authorId_id = userid)
-        #figure out how to know what group they are in
+        q1 = Report.objects.filter(authorId_id = authId)
+        q2 = Report.objects.filter(access_type = 0)
+        reports = q1 | q2
+        
         
 		#selects all the groups that the user is in
-        groups = Group.members.through.objects.filter(user_id = userid)
+        groups = Group.members.through.objects.filter(user_id = userid).values_list('group_id', flat=True)
+        #return HttpResponse(groups)
 
         
         if is_admin:
@@ -56,7 +61,8 @@ def index(request):
         
         else: #user is not admin
             #reports = Report.objects.filter()
-            groups = Group.objects.all()
+            #groups = Group.objects.all()
+            #return HttpResponse(groups)
             context_dict = {'reports': reports, 'groups': groups}
 
     else:
@@ -158,7 +164,7 @@ def uploadView(request):
             name = request.user.get_full_name()
             titleNoWS = request.POST['title'].rstrip()
             formattedTitle = titleNoWS.replace(' ', '_')
-            new_Report = Report(authorId = request.user.profile, authorName = name, title = titleNoWS, shortDesc = request.POST['shortDesc'], detailsDesc = request.POST['detailsDesc'], dateOfIncident = request.POST['dateOfIncident'], locationOfIncident = request.POST['locationOfIncident'], keywords = request.POST['keywords'], user_perm = request.POST.get('user_perm', False), timestamp = str(datetime.datetime.now()))
+            new_Report = Report(authorId = request.user.profile, authorName = name, title = titleNoWS, shortDesc = request.POST['shortDesc'], detailsDesc = request.POST['detailsDesc'], dateOfIncident = request.POST['dateOfIncident'], locationOfIncident = request.POST['locationOfIncident'], keywords = request.POST['keywords'], access_type = request.POST.get('user_perm', False), timestamp = str(datetime.datetime.now()))
             new_Report.save()
 
             if 'submit' in request.POST:			
@@ -201,6 +207,8 @@ def user_portal(request, curr_user):
             #context_dict['print'] =add_user
             group.members.add(add_user)   #adding user to group requested works!
             group.save()
+			#should we put here that the reports of that user all are then given permission to group
+			
             #now to delete the request
             delete_request = Request.objects.get(requester=curr_user, group=group)
             delete_request.delete()

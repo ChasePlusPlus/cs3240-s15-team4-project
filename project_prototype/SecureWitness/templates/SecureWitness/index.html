@@ -30,7 +30,8 @@
       {% if groups %}
       <ul>
 	{% for group in groups %}
-	<li><a href="/SecureWitness/group/{{ group.name }}">{{ group.name }}</a></li>
+	
+	<li><a href="/SecureWitness/group/{{ group }}">{{ group }}</a></li>
 	{% endfor %}
       </ul>
       {% else %}

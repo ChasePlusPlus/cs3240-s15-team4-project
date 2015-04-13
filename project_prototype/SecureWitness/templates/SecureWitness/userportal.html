@@ -11,9 +11,13 @@
         <div class="hero-unit">
             This is the user portal of <u>{{ curr_user }}</u>.
         {% if granted %}
+        {% if no_auth %}
+            <p>You're not authorized to grant this request.</p>
 
-      <strong><p>You have granted {{ curr_user }}'s request to join {{ group }}. {{ curr_user }} can now see all files and folders in {{ group }}.</p></strong>
-      <a href="/SecureWitness/group/{{ group }}">Return to the group page.</a>
+            {% else %}
+            <p>You have granted {{ curr_user }}'s request to join {{ group }}. {{ curr_user }} can now see all files and folders in {{ group }}.</p>
+             <a href="/SecureWitness/group/{{ group }}">Return to the group page.</a>
+        {% endif %}
       {% else %}
 
       <form id="grant_form" method="post" action="/SecureWitness/userportal/{{ curr_user }}/"

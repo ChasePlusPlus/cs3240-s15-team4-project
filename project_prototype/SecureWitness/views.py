@@ -23,6 +23,7 @@ def index(request):
     context = RequestContext(request)
     HttpResponse(request.user.id)
     if request.user.is_authenticated():
+
         userID = request.user.id
         userprof = UserProfile.objects.get(user_id=userID)
         is_admin = userprof.admin_status
@@ -37,11 +38,11 @@ def index(request):
         reports = q1 |  q2 
 		
 		#selects groups that the user is in
-        groups = Group.members.through.objects.filter(user_id = userid).values_list('group_id', flat=True)
+        mygroups = Group.members.through.objects.filter(user_id = userid).values_list('group_id', flat=True)
         reportIdList = []
 		
 		#select the reports associated with each group
-        for group in groups:
+        for group in mygroups:
             q4 = Report.group_perm.through.objects.filter(group_id = group).values_list('report_id', flat = True)
             reportIdList.append(q4)
 			
@@ -49,6 +50,16 @@ def index(request):
         for report in reportIdList:
             q5 = Report.objects.filter(title = report)
             reports = reports | q5
+        
+
+       	#get all the groups saved that the member is not a part of	
+        notMyGroups = Group.members.through.objects.exclude(user_id = userid).values_list('group_id', flat=True)
+        request_groups = []
+		#check to make sure that the groups chosen are not those the user is in (the way the table is set up is every user has own row with table name
+		#meaning that groups with the user can still be chosen when another user in same group)
+        for group in notMyGroups:
+            if group not in mygroups:
+                request_groups.append(group)
         
 
         
@@ -67,14 +78,15 @@ def index(request):
                 
             else: #request method is not POST
                 admin_user_form = AdminUserForm()
+            all_reports = Report.objects.all()
+            all_groups = Group.objects.all()
 
-            context_dict = {'reports': reports, 'groups': groups, 'admin_user_form':admin_user_form, 'admin_status': is_admin}
+            context_dict = {'all_groups': all_groups, 'all_reports': all_reports, 'reports': reports, 'groups': mygroups, 'admin_user_form':admin_user_form, 'admin_status': is_admin}
         
         else: #user is not admin
-            #reports = Report.objects.filter()
-            #groups = Group.objects.all()
-            #return HttpResponse(groups)
-            context_dict = {'reports': reports, 'groups': groups}
+           
+            context_dict = {'reports': reports, 'groups': mygroups, 'request_groups': request_groups}
+
 
     else:
         context_dict = {}
@@ -205,15 +217,19 @@ def user_settings(request):
 
 @login_required
 def user_portal(request, curr_user):
+    #curr_user is the user associaetd with the userportal we're currently on
+    #use request.session["currentuser"] to get the currently logged in user
     context = RequestContext(request)
     context_dict = {'curr_user': curr_user}
     granted = False
+    no_auth = False
     if request.method == 'POST':
         grant_form = GrantAccessForm(curr_user, data=request.POST)
         if grant_form.is_valid():
             selection = grant_form.cleaned_data['group_requests']  #gets selected option
             add_user = User.objects.get(username=curr_user)
             group = Group.objects.get(name=selection)
+
             context_dict['group'] = group
             #context_dict['print'] =add_user
             group.members.add(add_user)   #adding user to group requested works!
@@ -224,11 +240,30 @@ def user_portal(request, curr_user):
             delete_request = Request.objects.get(requester=curr_user, group=group)
             delete_request.delete()
 
+
+            members = [g.username for g in group.members.all()]
+
             granted = True
+
+            if request.session["currentuser"] in members:
+                #validation to check if the current user has the authority to grant the access request
+                context_dict['group'] = group
+                #context_dict['print'] =add_user
+                group.members.add(add_user)   #adding user to group requested works!
+                group.save()
+                #now to delete the request
+                delete_request = Request.objects.get(requester=curr_user, group=group)
+                delete_request.delete()
+
+                context_dict['no_auth'] = no_auth
+            else:
+                no_auth = True
+                context_dict['no_auth'] = no_auth
         else:
             print(grant_form.errors)
     else:
         grant_form = GrantAccessForm(curr_user)
+    #context_dict['no_auth'] = False
     context_dict['granted'] = granted
     context_dict['grant_form'] = grant_form
     return render_to_response('SecureWitness/userportal.html', context_dict, context)

@@ -33,11 +33,21 @@ def index(request):
         userid = request.user.id
         q1 = Report.objects.filter(authorId_id = authId)
         q2 = Report.objects.filter(access_type = 0)
-        reports = q1 | q2
+        reports = q1 |  q2 
+		#q3 selects all reports from with permissions for the groups the user is in
+        #q3 = Group.members.through.objects.filter(user_id = userid).values_list('group_id', flat = True)
+        groups = Group.members.through.objects.filter(user_id = userid).values_list('group_id', flat=True)
+        reportIdList = []
+        for group in groups:
+            q4 = Report.group_perm.through.objects.filter(group_id = group).values_list('report_id', flat = True)
+            reportIdList.append(q4)
+        for report in reportIdList:
+            q5 = Report.objects.filter(title = report)
+            reports = reports | q5
         
         
 		#selects all the groups that the user is in
-        groups = Group.members.through.objects.filter(user_id = userid).values_list('group_id', flat=True)
+        #groups = Group.members.through.objects.filter(user_id = userid).values_list('group_id', flat=True)
         #return HttpResponse(groups)
 
         

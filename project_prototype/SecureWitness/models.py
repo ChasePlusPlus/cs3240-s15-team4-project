@@ -45,7 +45,7 @@ class Report(models.Model):
     #folder = models.ForeignKey(Folder, blank=True)
     #user_perm = models.TextField #String of users permitted to access the file
     user_perm = models.TextField(default='', blank=True)
-    group_perm = models.TextField(default='', blank = True) #String of groups permitted to access the file
+    group_perm = models.ManyToManyField(Group) #String of groups permitted to access the file
     access_type = models.BooleanField(default=False) #False -> Public file, True -> Private file
     timestamp = models.TextField(default='', blank=True)
     shortDesc = models.TextField(default='', blank=True)

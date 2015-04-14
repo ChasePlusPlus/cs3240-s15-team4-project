@@ -8,7 +8,7 @@ from django.template import RequestContext, loader
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
-from SecureWitness.forms import FileUploadForm,UserForm, UserProfileForm, ReportUploadForm, AdminUserForm, RequestAccessForm, GrantAccessForm
+from SecureWitness.forms import FileUploadForm, SearchForm, UserForm, UserProfileForm, ReportUploadForm, AdminUserForm, RequestAccessForm, GrantAccessForm, CreateGroupForm
 from SecureWitness.models import File, Group, Report, UserProfile, Request
 
 import datetime
@@ -16,6 +16,80 @@ import datetime
 
 #class RequestForm(forms.Form):
 
+@login_required
+def adminportal(request):
+    context = RequestContext(request)
+    
+    userID = request.user.id
+    userprof = UserProfile.objects.get(user_id=userID)
+    is_admin = userprof.admin_status
+    #NOTE: user profile ID can be different from request.user.id because if add superuser but don't create user profile
+    authId = userprof.id
+
+
+    userid = request.user.id
+    #selects my reports and public reports
+    q1 = Report.objects.filter(authorId_id = authId)
+    q2 = Report.objects.filter(access_type = 0)
+    reports = q1 |  q2
+        
+    #selects groups that the user is in
+    mygroups = Group.members.through.objects.filter(user_id = userid).values_list('group_id', flat=True)
+    reportIdList = []
+        
+    #select the reports associated with each group
+    for group in mygroups:
+        q4 = Report.group_perm.through.objects.filter(group_id = group).values_list('report_id', flat = True)
+        reportIdList.append(q4)
+            
+    #add the reports that were selected to the query
+    for report in reportIdList:
+        q5 = Report.objects.filter(title = report)
+        reports = reports | q5
+            
+    #get all the groups saved that the member is not a part of	
+    notMyGroups = Group.members.through.objects.exclude(user_id = userid).values_list('group_id', flat=True).distinct()
+    request_groups = []
+        
+    #check to make sure that the groups chosen are not those the user is in (the way the table is set up is every user has own row with table name
+    #meaning that groups with the user can still be chosen when another user in same group)
+    for group in notMyGroups:
+        if group not in mygroups:
+            request_groups.append(group)
+    
+    if request.method == 'POST':
+        if 'submitAdmin' in request.POST:
+            admin_user_form = AdminUserForm(data=request.POST)
+            if admin_user_form.is_valid:
+                userID = request.POST['user']
+                user = UserProfile.objects.get(user_id=userID)
+                user.admin_status = True
+                user.save()
+                admin_user_form = AdminUserForm()
+                create_group_form = CreateGroupForm()
+                search_form = SearchForm()
+            else: #form is not valid
+                print (admin_user_form.errors)
+        if 'submitGroup' in request.POST:
+            create_group_form = CreateGroupForm(data=request.POST)
+            if create_group_form.is_valid:
+                group = create_group_form.save()
+                group.save()
+                create_group_form = CreateGroupForm()
+                admin_user_form = AdminUserForm()
+                search_form = SearchForm()
+            else:
+                print(create_group_form.errors)
+    else: #request method is not POST
+        admin_user_form = AdminUserForm()
+        create_group_form = CreateGroupForm()
+        search_form = SearchForm()
+        all_reports = Report.objects.all()
+        all_groups = Group.objects.all()
+
+    context_dict = {'search_form': search_form, 'all_groups': all_groups, 'all_reports': all_reports, 'reports': reports, 'groups': mygroups, 'admin_user_form': admin_user_form, 'admin_status': is_admin, 'create_group_form': create_group_form}
+
+    return render_to_response('SecureWitness/adminportal.html', context_dict, context)
 
 def index(request):
 #need something if not logged in redirect to login page
@@ -27,71 +101,62 @@ def index(request):
         userID = request.user.id
         userprof = UserProfile.objects.get(user_id=userID)
         is_admin = userprof.admin_status
-		#NOTE: user profile ID can be different from request.user.id because if add superuser but don't create user profile
+        #NOTE: user profile ID can be different from request.user.id because if add superuser but don't create user profile
         authId = userprof.id
 
 
         userid = request.user.id
-		#selects my reports and public reports
+        #selects my reports and public reports
         q1 = Report.objects.filter(authorId_id = authId)
         q2 = Report.objects.filter(access_type = 0)
-        reports = q1 |  q2 
-		
-		#selects groups that the user is in
+        reports = q1 |  q2
+        
+        #selects groups that the user is in
         mygroups = Group.members.through.objects.filter(user_id = userid).values_list('group_id', flat=True)
         reportIdList = []
-		
-		#select the reports associated with each group
+        
+        #select the reports associated with each group
         for group in mygroups:
             q4 = Report.group_perm.through.objects.filter(group_id = group).values_list('report_id', flat = True)
             reportIdList.append(q4)
-			
-		#add the reports that were selected to the query
+            
+        #add the reports that were selected to the query
         for report in reportIdList:
             q5 = Report.objects.filter(title = report)
             reports = reports | q5
         
-
-       	#get all the groups saved that the member is not a part of	
+        #get all the groups saved that the member is not a part of	
         notMyGroups = Group.members.through.objects.exclude(user_id = userid).values_list('group_id', flat=True).distinct()
         request_groups = []
-		#check to make sure that the groups chosen are not those the user is in (the way the table is set up is every user has own row with table name
-		#meaning that groups with the user can still be chosen when another user in same group)
+        
+        #check to make sure that the groups chosen are not those the user is in (the way the table is set up is every user has own row with table name
+        #meaning that groups with the user can still be chosen when another user in same group)
         for group in notMyGroups:
             if group not in mygroups:
                 request_groups.append(group)
         
 
-        
-        if is_admin:
-            if request.method == 'POST':
-                admin_user_form = AdminUserForm(data=request.POST)
-                if admin_user_form.is_valid:
-                    userID = request.POST['user']
-                    user = UserProfile.objects.get(user_id=userID)
-                    user.admin_status = True
-                    user.save()
-                    admin_user_form = AdminUserForm()
-                    
-                else: #form is not valid
-                    print (admin_user_form.errors)
-                
-            else: #request method is not POST
-                admin_user_form = AdminUserForm()
-            all_reports = Report.objects.all()
-            all_groups = Group.objects.all()
-
-            context_dict = {'all_groups': all_groups, 'all_reports': all_reports, 'reports': reports, 'groups': mygroups, 'admin_user_form':admin_user_form, 'admin_status': is_admin}
-        
-        else: #user is not admin
-           
-            context_dict = {'reports': reports, 'groups': mygroups, 'request_groups': request_groups}
+        search_form = SearchForm()
+        context_dict = {'search_form': search_form, 'reports': reports, 'groups': mygroups, 'request_groups': request_groups, 'admin_status': is_admin}
 
 
     else:
         context_dict = {}
 
     return render_to_response('SecureWitness/index.html', context_dict, context)
+
+@login_required
+def results(request):
+    context = RequestContext(request)
+    
+    userID = request.user.id
+    userprof = UserProfile.objects.get(user_id=userID)
+    is_admin = userprof.admin_status
+    
+    context_dict = {'admin_status': is_admin}
+    return render_to_response('SecureWitness/results.html', context_dict, context)
+    
+
 
 def register(request):
     context = RequestContext(request)
@@ -173,6 +238,7 @@ def user_logout(request):
 
 @login_required
 def uploadView(request):
+    
     if request.method == 'POST':
 		#form that holds the upload file buttons
         
@@ -212,11 +278,21 @@ def uploadView(request):
 @login_required
 def user_settings(request):
     context = RequestContext(request)
-    return render_to_response('SecureWitness/settings.html', {}, context)
+    
+    userID = request.user.id
+    userprof = UserProfile.objects.get(user_id=userID)
+    is_admin = userprof.admin_status
+    
+    return render_to_response('SecureWitness/settings.html', {'admin_status': is_admin}, context)
 
 
 @login_required
 def user_portal(request, curr_user):
+    
+    userID = request.user.id
+    userprof = UserProfile.objects.get(user_id=userID)
+    is_admin = userprof.admin_status
+    
     #return HttpResponse(curr_user)
     #curr_user is the user associaetd with the userportal we're currently on
     #use request.session["currentuser"] to get the currently logged in user
@@ -267,14 +343,20 @@ def user_portal(request, curr_user):
     #context_dict['no_auth'] = False
     context_dict['granted'] = granted
     context_dict['grant_form'] = grant_form
+    context_dict['admin_status'] = is_admin
     return render_to_response('SecureWitness/userportal.html', context_dict, context)
 
 
 @login_required
 def request_access(request, usergroup):
     context = RequestContext(request)
+    
+    userID = request.user.id
+    userprof = UserProfile.objects.get(user_id=userID)
+    is_admin = userprof.admin_status
+    
     group_list = Group.objects.all()
-    context_dict = {'group_list': group_list}
+    context_dict = {'group_list': group_list, 'admin_status': is_admin}
     g = Group.objects.get(name=usergroup)
     context_dict['group'] = g
 
@@ -312,8 +394,13 @@ def group(request, usergroup):
     authorId = request.user #gets logged in user
 
     context = RequestContext(request)
+    
+    userID = request.user.id
+    userprof = UserProfile.objects.get(user_id=userID)
+    is_admin = userprof.admin_status
+    
     group_list = Group.objects.all()
-    context_dict = {'group_list': group_list}
+    context_dict = {'group_list': group_list, 'admin_status': is_admin}
     g = Group.objects.get(name=usergroup)
     context_dict['group'] = g
     members = [val for val in g.members.all() if val in g.members.all()]
@@ -381,12 +468,18 @@ def group(request, usergroup):
 def encode_url(str):
     return str.replace(' ', '_')
 
+@login_required
 def report(request, selectedReport):
+    
+    userID = request.user.id
+    userprof = UserProfile.objects.get(user_id=userID)
+    is_admin = userprof.admin_status
+    
     #print("looking at report")
     #return HttpResponse ("Looking at report: {0}".format(selectedReport.title))
     context = RequestContext(request)
     report_list = Report.objects.all()
-    context_dict = {'report_list': report_list}
+    context_dict = {'report_list': report_list, 'admin_status': is_admin}
 	#need to get rid of extra space AND encode url
     #titleRequest = selectedReport.replace('_', ' ')
 	#context_dict['titleVal'] = titleRequest
@@ -401,6 +494,7 @@ def report(request, selectedReport):
 	
     return render_to_response('SecureWitness/reportDetails.html', context_dict, context)
 
+@login_required
 def FileUpload(request, reportTitle):
 	#return HttpResponse(reportTitle)
     if request.method == 'POST':

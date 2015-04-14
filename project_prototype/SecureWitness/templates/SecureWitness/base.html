@@ -47,6 +47,9 @@
 	    <ul class="nav nav-list">
 	      <li class="nav-header">List Header</li>
 	      {% if user.is_authenticated %}
+              {% if admin_status %}
+              <li><a href="/SecureWitness/adminportal/">Admin Portal</a></li>
+              {% endif %}
 	      <li><a href="/SecureWitness/userportal/">User Portal</a></li>
 	      <li><a href="/SecureWitness/upload/">Upload</a></li>
 	      <li><a href="/SecureWitness/settings/">Settings</a></li>

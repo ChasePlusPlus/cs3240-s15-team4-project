@@ -1,5 +1,5 @@
 from django import forms
-from SecureWitness.models import UserProfile, Request
+from SecureWitness.models import UserProfile, Request, Group, Report
 from django.contrib.auth.models import User
 from django.forms import widgets
 
@@ -49,3 +49,15 @@ class AdminUserForm(forms.Form):
 
     user = forms.ModelChoiceField(queryset=UserProfile.objects.filter(admin_status=False), required=False)
     
+class CreateGroupForm(forms.ModelForm):
+    
+    class Meta:
+        model = Group
+        fields = ('name', 'members')
+
+class SearchForm(forms.Form):
+
+    CHOICES = (('title', 'Title'), ('shortDesc', 'Short Description'), ('locationOfIncident', 'Location of Incident'), ('keywords', 'Keywords'))
+    
+    search_field = forms.ChoiceField(choices=CHOICES)
+    text = forms.CharField()

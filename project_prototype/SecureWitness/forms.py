@@ -2,6 +2,7 @@ from django import forms
 from SecureWitness.models import UserProfile, Request, Group, Report
 from django.contrib.auth.models import User
 from django.forms import widgets
+from SecureWitness.models import Report
 
 
 class RequestAccessForm(forms.Form):
@@ -48,6 +49,16 @@ class UserProfileForm(forms.ModelForm):
 class AdminUserForm(forms.Form):
 
     user = forms.ModelChoiceField(queryset=UserProfile.objects.filter(admin_status=False), required=False)
+	
+class EditReportForm(forms.Form):
+    title = forms.CharField()
+	#author = forms.CharField()
+    shortDesc = forms.CharField()
+    detailsDesc = forms.CharField(widget = forms.Textarea)
+    dateOfIncident = forms.CharField(required=False)#these do not need to be populated
+    locationOfIncident = forms.CharField(required = False)#these do not need to be populated
+    keywords = forms.CharField(required = False)#these do not need to be populated
+    user_perm = forms.BooleanField(required = False)
     
 class CreateGroupForm(forms.ModelForm):
     

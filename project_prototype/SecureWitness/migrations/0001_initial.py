@@ -15,8 +15,8 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='File',
             fields=[
-                ('id', models.AutoField(verbose_name='ID', serialize=False, primary_key=True, auto_created=True)),
-                ('file', models.FileField(upload_to='SecureWitness/', default='', blank=True, null=True)),
+                ('id', models.AutoField(auto_created=True, verbose_name='ID', primary_key=True, serialize=False)),
+                ('file', models.FileField(null=True, blank=True, upload_to='SecureWitness/', default='')),
             ],
             options={
             },
@@ -25,7 +25,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Folder',
             fields=[
-                ('id', models.AutoField(verbose_name='ID', serialize=False, primary_key=True, auto_created=True)),
+                ('id', models.AutoField(auto_created=True, verbose_name='ID', primary_key=True, serialize=False)),
                 ('name', models.CharField(max_length=100)),
             ],
             options={
@@ -35,7 +35,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Group',
             fields=[
-                ('name', models.CharField(max_length=200, serialize=False, primary_key=True)),
+                ('name', models.CharField(serialize=False, max_length=200, primary_key=True)),
                 ('members', models.ManyToManyField(to=settings.AUTH_USER_MODEL)),
             ],
             options={
@@ -45,7 +45,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Key',
             fields=[
-                ('file', models.OneToOneField(primary_key=True, to='SecureWitness.File', serialize=False)),
+                ('file', models.OneToOneField(to='SecureWitness.File', primary_key=True, serialize=False)),
                 ('key', models.TextField()),
             ],
             options={
@@ -55,16 +55,17 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Report',
             fields=[
-                ('title', models.CharField(max_length=300, serialize=False, default='', primary_key=True)),
-                ('authorName', models.CharField(max_length=30, default='', blank=True)),
+                ('id', models.AutoField(auto_created=True, verbose_name='ID', primary_key=True, serialize=False)),
+                ('title', models.CharField(max_length=300, default='')),
+                ('authorName', models.CharField(max_length=30, blank=True, default='')),
                 ('user_perm', models.TextField(default='', blank=True)),
                 ('access_type', models.BooleanField(default=False)),
                 ('timestamp', models.TextField(default='', blank=True)),
                 ('shortDesc', models.TextField(default='', blank=True)),
                 ('detailsDesc', models.TextField(default='', blank=True)),
-                ('dateOfIncident', models.TextField(null=True, default='', blank=True)),
-                ('locationOfIncident', models.TextField(null=True, default='', blank=True)),
-                ('keywords', models.TextField(null=True, default='', blank=True)),
+                ('dateOfIncident', models.TextField(default='', blank=True, null=True)),
+                ('locationOfIncident', models.TextField(default='', blank=True, null=True)),
+                ('keywords', models.TextField(default='', blank=True, null=True)),
             ],
             options={
             },
@@ -73,7 +74,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Request',
             fields=[
-                ('id', models.AutoField(verbose_name='ID', serialize=False, primary_key=True, auto_created=True)),
+                ('id', models.AutoField(auto_created=True, verbose_name='ID', primary_key=True, serialize=False)),
                 ('requester', models.CharField(max_length=100, default='')),
                 ('group', models.ForeignKey(to='SecureWitness.Group')),
             ],
@@ -84,7 +85,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='UserProfile',
             fields=[
-                ('id', models.AutoField(verbose_name='ID', serialize=False, primary_key=True, auto_created=True)),
+                ('id', models.AutoField(auto_created=True, verbose_name='ID', primary_key=True, serialize=False)),
                 ('admin_status', models.BooleanField(default=False)),
                 ('user', models.OneToOneField(to=settings.AUTH_USER_MODEL)),
             ],
@@ -96,12 +97,6 @@ class Migration(migrations.Migration):
             model_name='report',
             name='authorId',
             field=models.ForeignKey(to='SecureWitness.UserProfile', blank=True),
-            preserve_default=True,
-        ),
-        migrations.AddField(
-            model_name='report',
-            name='folder',
-            field=models.ForeignKey(to='SecureWitness.Folder', blank=True),
             preserve_default=True,
         ),
         migrations.AddField(

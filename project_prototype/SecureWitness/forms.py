@@ -1,5 +1,5 @@
 from django import forms
-from SecureWitness.models import UserProfile, Request
+from SecureWitness.models import UserProfile, Request, Folder
 from django.contrib.auth.models import User
 from django.forms import widgets
 
@@ -17,6 +17,13 @@ class GrantAccessForm(forms.Form):
         super(GrantAccessForm, self).__init__(*args, **kwargs)
         self.fields['group_requests'] = forms.ChoiceField(
             choices=[(o.group, str(o)) for o in Request.objects.filter(requester=user)])
+
+
+class MakeFolderForm(forms.Form):
+    folder_name = forms.CharField(max_length=120)
+    class Meta:
+        model = Folder
+        fields = ('name',)
 
 
 class ReportUploadForm(forms.Form):

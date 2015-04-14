@@ -15,7 +15,7 @@ class UserProfile(models.Model):
 class Folder(models.Model):
     #id = models.IntegerField(primary_key=True, unique=True)
     name = models.CharField(max_length=100)
-    #reports = models.ManyToManyField(Report)
+    owner = models.ForeignKey(User)
 
     def __str__(self):
         return self.name

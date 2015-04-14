@@ -8,13 +8,9 @@ from django.template import RequestContext, loader
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
-from SecureWitness.forms import FileUploadForm,UserForm, UserProfileForm, ReportUploadForm, AdminUserForm, RequestAccessForm, GrantAccessForm
-from SecureWitness.models import File, Group, Report, UserProfile, Request
-
+from SecureWitness.forms import FileUploadForm,UserForm, UserProfileForm, ReportUploadForm, AdminUserForm, RequestAccessForm, GrantAccessForm, MakeFolderForm
+from SecureWitness.models import File, Group, Report, UserProfile, Request, Folder
 import datetime
-
-
-#class RequestForm(forms.Form):
 
 
 def index(request):
@@ -60,21 +56,20 @@ def index(request):
         for group in notMyGroups:
             if group not in mygroups:
                 request_groups.append(group)
-        
 
-        
         if is_admin:
             if request.method == 'POST':
-                admin_user_form = AdminUserForm(data=request.POST)
-                if admin_user_form.is_valid:
-                    userID = request.POST['user']
-                    user = UserProfile.objects.get(user_id=userID)
-                    user.admin_status = True
-                    user.save()
-                    admin_user_form = AdminUserForm()
-                    
-                else: #form is not valid
-                    print (admin_user_form.errors)
+                if 'submit_admin' in request.data:
+                    admin_user_form = AdminUserForm(data=request.POST)
+                    if admin_user_form.is_valid:
+                        userID = request.POST['user']
+                        user = UserProfile.objects.get(user_id=userID)
+                        user.admin_status = True
+                        user.save()
+                        admin_user_form = AdminUserForm()
+
+                    else: #form is not valid
+                        print (admin_user_form.errors)
                 
             else: #request method is not POST
                 admin_user_form = AdminUserForm()
@@ -87,6 +82,19 @@ def index(request):
            
             context_dict = {'reports': reports, 'groups': mygroups, 'request_groups': request_groups}
 
+        #NEW CODE for folder creation not yet tested
+        if request.method == 'POST':
+            if 'submit_make_folder' in request.data:
+                make_folder_form = MakeFolderForm(data=request.POST)
+                if make_folder_form.is_valid:
+                    foldername = request.POST['folder_name']
+                    new_folder = Folder(name=foldername, owner=request.user.username)
+                    new_folder.save()
+
+                else: #form is not valid
+                    print (make_folder_form.errors)
+            else: #request method is not POST
+                make_folder_form = MakeFolderForm()
 
     else:
         context_dict = {}

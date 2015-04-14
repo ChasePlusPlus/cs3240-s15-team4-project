@@ -91,14 +91,27 @@
 		{% csrf_token %}
 		{{ admin_user_form.as_p }}
 
-		<input type="submit" name="submit" value="Promote" />
+		<input type="submit" name="submit_admin" value="Promote" />
 		</form>
 		
       {% endif %}
       {% else %}
       This is the home page.
       {% endif %}
-	  
+
+        <form id="make_folder_form" method="post" action="/SecureWitness/" enctype="multipart/form-data">
+    	{% csrf_token %}
+
+	<!-- as_p method wraps each element in a paragraph element.
+	     Each element appears on a new line. -->
+	    {{ make_folder_form.as_p }}
+
+	    <input type="submit" name="submit_make_folder" value="Make Folder" />
+         </form>
+
+
+
+
     </div>
     {% endblock %}
   </body>

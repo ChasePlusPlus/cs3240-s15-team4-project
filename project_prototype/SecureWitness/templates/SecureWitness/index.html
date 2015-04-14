@@ -21,7 +21,7 @@
       {% if reports %}
       <ul>
 	{% for report in reports %}
-	<li><a href="/SecureWitness/report/{{report.title.split|join:'_'}}">{{ report.title }}</a></li>
+	<li><a href="/SecureWitness/report/{{report.id}}">{{ report.title }}</a></li>
 	{% endfor %}
       </ul>
       {% else %}
@@ -59,7 +59,7 @@
       {% if all_reports %}
       <ul>
 	{% for report in all_reports %}
-	<li><a href="/SecureWitness/report/{{report.title.split|join:'_'}}">{{ report.title }}</a></li>
+	<li><a href="/SecureWitness/report/{{report.id}}">{{ report.title }}</a></li>
 	{% endfor %}
       </ul>
       {% else %}

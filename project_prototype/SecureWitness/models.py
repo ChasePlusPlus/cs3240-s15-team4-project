@@ -40,7 +40,7 @@ class Request(models.Model):
 
 class Report(models.Model):
     #id = models.IntegerField(unique=True) #previously had primary key in here
-    title = models.CharField(max_length=300, primary_key=True, default = '')
+    title = models.CharField(max_length=300, default = '')
     authorId = models.ForeignKey(UserProfile, blank=True)
     authorName = models.CharField(max_length = 30, default = '', blank = True)
     #folder = models.ForeignKey(Folder, blank=True)

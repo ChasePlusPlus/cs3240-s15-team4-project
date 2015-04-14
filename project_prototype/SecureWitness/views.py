@@ -48,7 +48,7 @@ def index(request):
 			
 		#add the reports that were selected to the query
         for report in reportIdList:
-            q5 = Report.objects.filter(title = report)
+            q5 = Report.objects.filter(id = report)
             reports = reports | q5
         
 
@@ -186,7 +186,7 @@ def uploadView(request):
             User.profile = property(lambda u: UserProfile.objects.get_or_create(user=u)[0])
             name = request.user.get_full_name()
             titleNoWS = request.POST['title'].rstrip()
-            formattedTitle = titleNoWS.replace(' ', '_')
+            #formattedTitle = titleNoWS.replace(' ', '_')
             new_Report = Report(authorId = request.user.profile, authorName = name, title = titleNoWS, shortDesc = request.POST['shortDesc'], detailsDesc = request.POST['detailsDesc'], dateOfIncident = request.POST['dateOfIncident'], locationOfIncident = request.POST['locationOfIncident'], keywords = request.POST['keywords'], access_type = request.POST.get('user_perm', False), timestamp = str(datetime.datetime.now()))
             new_Report.save()
 
@@ -196,7 +196,7 @@ def uploadView(request):
                 #render(request, 'SecureWitness/reportDetails.html', {'report': new_Report.title})
             elif 'upload' in request.POST:
 		        #direct to add files format
-                return HttpResponseRedirect(reverse('SecureWitness:FileUpload', args=(formattedTitle,)))
+                return HttpResponseRedirect(reverse('SecureWitness:FileUpload', args=(new_Report.id,)))
         else:
 			#If there is an issue with uploading a file let the user know
             return HttpResponse("Invalid File Upload details... Please be sure you are filling out the appropriate fields.")
@@ -390,27 +390,31 @@ def report(request, selectedReport):
 	#need to get rid of extra space AND encode url
     #titleRequest = selectedReport.replace('_', ' ')
 	#context_dict['titleVal'] = titleRequest
-    selectedReport2 = selectedReport.replace("_"," ")
-    report = Report.objects.filter(title=selectedReport2)
+    #selectedReport2 = selectedReport.replace("_"," ")
+    report = Report.objects.get(id=selectedReport)
     context_dict['report'] = report
+    if request.user.get_full_name() == report.authorName:
+        context_dict['isAuthor'] = 1
+    else:
+        context_dict['isAuthor'] = 0
 
     #get files associated with report
-    files = File.objects.filter(report_id = selectedReport2)
+    files = File.objects.filter(report_id = selectedReport)
     context_dict['files'] = files
   
 
     	
     return render_to_response('SecureWitness/reportDetails.html', context_dict, context)
 
-def FileUpload(request, reportTitle):
+def FileUpload(request, reportID):
 	#return HttpResponse(reportTitle)
     if request.method == 'POST':
         #if form is valid get file info and add to the database
         form = FileUploadForm(request.POST, request.FILES)
         if form.is_valid():            
             #return HttpResponse("VALID")
-            reportTitle2 = reportTitle.replace("_", " ")
-            reportSelected = Report.objects.get(title = reportTitle2)
+            #reportTitle2 = reportTitle.replace("_", " ")
+            reportSelected = Report.objects.get(id = reportID)
             newFile = File(file = request.FILES['file'], report = reportSelected)
             newFile.save()
         #if 'done then return to index page
@@ -427,13 +431,13 @@ def FileUpload(request, reportTitle):
     else:
         form = FileUploadForm()
         
-    data = {'form': form, 'reportTitle': reportTitle}
+    data = {'form': form, 'reportID': reportID}
 	#return render(request, 'polls/upload.html', data)
     return render_to_response('SecureWitness/FileUpload.html', data, context_instance=RequestContext(request))
 
-def editReport(request, reportTitle):
-    reportTitle2 = reportTitle.replace("_", " ")
-    reportSelected = Report.objects.get(title = reportTitle2)
+def editReport(request, reportID):
+    #reportTitle2 = reportTitle.replace("_", " ")
+    reportSelected = Report.objects.get(id = reportID)
     #reportID = reportSelected.id
 
     if request.method == 'POST':
@@ -442,28 +446,47 @@ def editReport(request, reportTitle):
         if form.is_valid():
             titleNoWS = request.POST['title'].rstrip()
             #return HttpResponse(reportSelected.title +" = "+ titleNoWS)
-            #reportSelected.title = titleNoWS
+            reportSelected.title = titleNoWS
             reportSelected.shortDesc = request.POST['shortDesc']
-            #reportSelected.detailsDesc = request.POST['detailsDesc']
-            #reportSelected.dateOfIncident = request.POST['dateOfIncident']
-            #reportSelected.locationOfIncident = request.POST['locationOfIncident']
-            #reportSelected.keywords = request.POST['keywords']
-            #reportSelected.access_type = request.POST.get('user_perm', False)
+            reportSelected.detailsDesc = request.POST['detailsDesc']
+            reportSelected.dateOfIncident = request.POST['dateOfIncident']
+            reportSelected.locationOfIncident = request.POST['locationOfIncident']
+            reportSelected.keywords = request.POST['keywords']
+            reportSelected.access_type = request.POST.get('user_perm', False)
             reportSelected.save(force_update = True)
-            return HttpResponseRedirect(reverse('SecureWitness:index'))
+			
+            if 'addFile' in request.POST:
+                return HttpResponseRedirect(reverse('SecureWitness:FileUpload', args=(reportSelected.id,)))
+            elif 'deleteFile' in request.POST:
+                return HttpResponseRedirect(reverse('SecureWitness:DeleteFile', args = (reportID)))
+            else:
+                return HttpResponseRedirect(reverse('SecureWitness:index'))
     else:
 	    #insert form values as default to be shown
+        files = File.objects.filter(report_id = reportID)
         form = EditReportForm(initial = {'title': reportSelected.title, 'shortDesc': reportSelected.shortDesc, 'detailsDesc': reportSelected.detailsDesc, 'dateOfIncident': reportSelected.dateOfIncident, 'locationOfIncident': reportSelected.locationOfIncident, 'keywords': reportSelected.keywords, 'user_perm': reportSelected.user_perm} )
     
-    context_dict = {'reportTitle': reportTitle, 'form': form}
+    context_dict = {'reportID': reportID, 'form': form, 'files' : files}
     return render_to_response('SecureWitness/edit.html', context_dict, context_instance=RequestContext(request))
 
-def deleteReport(request, reportTitle):
+def deleteReport(request, reportID):
     context = RequestContext(request)
 
-    reportTitle2 = reportTitle.replace("_", " ")
-    reportSelected = Report.objects.get(title = reportTitle2).delete()
+    #reportTitle2 = reportTitle.replace("_", " ")
+    reportSelected = Report.objects.get(id = reportID).delete()
 	
     return HttpResponseRedirect(reverse('SecureWitness:index'))
-    
+	
+def deleteFile(request, reportID):
+    #files = File.objects.filter(report_id = reportID)
+    if request.method == 'POST':
+        #form = deleteFilesForm(request.POST, request.FILES)
+        fileID = request.POST['file']
+        deletedFile = File.objects.get(id = fileID).delete()
+        return HttpResponseRedirect(reverse('SecureWitness:index'))
+    else:
+        files = File.objects.filter(report_id = reportID)
+		#form = deleteFilesForm(reportID)
+    context_dict = {'reportID': reportID, 'files':files}
+    return render_to_response('SecureWitness/deleteFile.html', context_dict, context_instance=RequestContext(request))
 

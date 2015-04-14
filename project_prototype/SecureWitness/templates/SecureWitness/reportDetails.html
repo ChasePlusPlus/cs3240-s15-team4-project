@@ -11,30 +11,34 @@
     {% if report %}
 	
         <ul>
-        {% for rep in report %}
+        
 		<div class="hero-unit">
             <center>
-				<a href = "/SecureWitness"> Home </a> &nbsp;&nbsp;&nbsp;
-				<a href = "/SecureWitness/edit/{{rep.title.split|join:'_'}}">Edit Report</a>&nbsp;&nbsp;&nbsp;
-				<a href = "/SecureWitness/delete/{{rep.title.split|join:'_'}}">Delete Report</a>
-				<h1>{{rep.title}}</h1>
+				
+				<a href = "/SecureWitness"> Home </a> 
+				{% if isAuthor %}
+					&nbsp;&nbsp;&nbsp;
+					<a href = "/SecureWitness/edit/{{report.id}}">Edit Report</a>&nbsp;&nbsp;&nbsp;
+					<a href = "/SecureWitness/delete/{{report.id}}">Delete Report</a>
+				{% endif %}
+				<h1>{{report.title}}</h1>
 			</center>
 		</div>
-			Author: {{rep.authorName}} </br>
-        	Upload Date: {{rep.timestamp}} </br>
-			Subject: {{rep.shortDesc}} </br>
-			Description: {{rep.detailsDesc}} </br>
-			{% if rep.dateOfIncident %}
-			    Incident Date: {{rep.dateOfIncident}}</br>
+			Author: {{report.authorName}} </br>
+        	Upload Date: {{report.timestamp}} </br>
+			Subject: {{report.shortDesc}} </br>
+			Description: {{report.detailsDesc}} </br>
+			{% if report.dateOfIncident %}
+			    Incident Date: {{report.dateOfIncident}}</br>
 			{% endif %}
-			{% if rep.locationOfIncident %}
-			    Location: {{rep.locationOfIncident}}</br>
+			{% if report.locationOfIncident %}
+			    Location: {{report.locationOfIncident}}</br>
 			{% endif %}
-			{% if rep.keywords %}
-				Keywords: {{rep.keywords}}</br>
+			{% if report.keywords %}
+				Keywords: {{report.keywords}}</br>
 			{% endif %}
 			
-        {% endfor %}
+        
     	
         {% if files %}
 				Files: 

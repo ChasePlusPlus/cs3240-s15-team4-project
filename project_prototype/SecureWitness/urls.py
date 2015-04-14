@@ -15,4 +15,6 @@ urlpatterns = patterns('',
     url(r'^group/(?P<usergroup>\w+)/request/$', views.request_access, name='request'), #currently editting
     url(r'^report/(?P<selectedReport>\w+)/$', views.report, name='report'),
     url(r'^FileUpload/(?P<reportTitle>\w+)/$', views.FileUpload, name='FileUpload'),
+    url(r'^edit/(?P<reportTitle>\w+)/$', views.editReport, name='edit'),
+    url(r'^delete/(?P<reportTitle>\w+)/$', views.deleteReport, name='delete')
     )+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) #puts in proper folder

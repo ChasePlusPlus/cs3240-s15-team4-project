@@ -8,7 +8,7 @@ from django.template import RequestContext, loader
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
-from SecureWitness.forms import FileUploadForm,UserForm, UserProfileForm, ReportUploadForm, AdminUserForm, RequestAccessForm, GrantAccessForm
+from SecureWitness.forms import FileUploadForm,UserForm, UserProfileForm, ReportUploadForm, AdminUserForm, RequestAccessForm, GrantAccessForm, EditReportForm
 from SecureWitness.models import File, Group, Report, UserProfile, Request
 
 import datetime
@@ -397,8 +397,9 @@ def report(request, selectedReport):
     #get files associated with report
     files = File.objects.filter(report_id = selectedReport2)
     context_dict['files'] = files
-	
-	
+  
+
+    	
     return render_to_response('SecureWitness/reportDetails.html', context_dict, context)
 
 def FileUpload(request, reportTitle):
@@ -429,5 +430,40 @@ def FileUpload(request, reportTitle):
     data = {'form': form, 'reportTitle': reportTitle}
 	#return render(request, 'polls/upload.html', data)
     return render_to_response('SecureWitness/FileUpload.html', data, context_instance=RequestContext(request))
+
+def editReport(request, reportTitle):
+    reportTitle2 = reportTitle.replace("_", " ")
+    reportSelected = Report.objects.get(title = reportTitle2)
+    #reportID = reportSelected.id
+
+    if request.method == 'POST':
+		#form that holds the upload file buttons
+        form = EditReportForm(request.POST, request.FILES)
+        if form.is_valid():
+            titleNoWS = request.POST['title'].rstrip()
+            #return HttpResponse(reportSelected.title +" = "+ titleNoWS)
+            #reportSelected.title = titleNoWS
+            reportSelected.shortDesc = request.POST['shortDesc']
+            #reportSelected.detailsDesc = request.POST['detailsDesc']
+            #reportSelected.dateOfIncident = request.POST['dateOfIncident']
+            #reportSelected.locationOfIncident = request.POST['locationOfIncident']
+            #reportSelected.keywords = request.POST['keywords']
+            #reportSelected.access_type = request.POST.get('user_perm', False)
+            reportSelected.save(force_update = True)
+            return HttpResponseRedirect(reverse('SecureWitness:index'))
+    else:
+	    #insert form values as default to be shown
+        form = EditReportForm(initial = {'title': reportSelected.title, 'shortDesc': reportSelected.shortDesc, 'detailsDesc': reportSelected.detailsDesc, 'dateOfIncident': reportSelected.dateOfIncident, 'locationOfIncident': reportSelected.locationOfIncident, 'keywords': reportSelected.keywords, 'user_perm': reportSelected.user_perm} )
+    
+    context_dict = {'reportTitle': reportTitle, 'form': form}
+    return render_to_response('SecureWitness/edit.html', context_dict, context_instance=RequestContext(request))
+
+def deleteReport(request, reportTitle):
+    context = RequestContext(request)
+
+    reportTitle2 = reportTitle.replace("_", " ")
+    reportSelected = Report.objects.get(title = reportTitle2).delete()
+	
+    return HttpResponseRedirect(reverse('SecureWitness:index'))
     
 

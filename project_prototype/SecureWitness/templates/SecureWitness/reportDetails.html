@@ -13,7 +13,12 @@
         <ul>
         {% for rep in report %}
 		<div class="hero-unit">
-			<h2>{{rep.title}}</h2>
+            <center>
+				<a href = "/SecureWitness"> Home </a> &nbsp;&nbsp;&nbsp;
+				<a href = "/SecureWitness/edit/{{rep.title.split|join:'_'}}">Edit Report</a>&nbsp;&nbsp;&nbsp;
+				<a href = "/SecureWitness/delete/{{rep.title.split|join:'_'}}">Delete Report</a>
+				<h1>{{rep.title}}</h1>
+			</center>
 		</div>
 			Author: {{rep.authorName}} </br>
         	Upload Date: {{rep.timestamp}} </br>
@@ -43,5 +48,7 @@
       
 	{% endif %}
     {% endblock %}
+	
+	
   </body>
 </html>

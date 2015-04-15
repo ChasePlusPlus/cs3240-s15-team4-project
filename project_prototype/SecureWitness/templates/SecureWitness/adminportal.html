@@ -33,13 +33,15 @@
       {% endif %}
       
       <h2>Promote To Admin</h2>
-	  <form id="admin_user_form" method="post" action="/SecureWitness/" enctype="multipart/form-data">
+	  <form id="admin_user_form" method="post" action="/SecureWitness/adminportal/" enctype="multipart/form-data">
 	    {% csrf_token %}
 	    {{ admin_user_form.as_p }}
 	    <input type="submit" name="submitAdmin" value="Promote" />
 	  </form>
+       
+    
       <h2>Create Group</h2>
-	  <form id="create_group_form" method="post" action="/SecureWitness/" enctype="multipart/form-data">
+	  <form id="create_group_form" method="post" action="/SecureWitness/adminportal/" enctype="multipart/form-data">
 	    {% csrf_token %}
 	    {{ create_group_form.as_p }}
 	    <input type="submit" name="submitGroup" value="Create" />

@@ -8,7 +8,7 @@ from django.template import RequestContext, loader
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
-from SecureWitness.forms import FileUploadForm, SearchForm, UserForm, UserProfileForm, ReportUploadForm, AdminUserForm, RequestAccessForm, GrantAccessForm, CreateGroupForm, EditReportForm
+from SecureWitness.forms import AddMemberForm, RemoveMemberForm, FileUploadForm, SearchForm, UserForm, UserProfileForm, ReportUploadForm, AdminUserForm, RequestAccessForm, GrantAccessForm, CreateGroupForm, EditReportForm
 from SecureWitness.models import File, Group, Report, UserProfile, Request
 
 import datetime
@@ -20,14 +20,12 @@ import datetime
 def adminportal(request):
     context = RequestContext(request)
     
-    userID = request.user.id
-    userprof = UserProfile.objects.get(user_id=userID)
+    userid = request.user.id
+    userprof = UserProfile.objects.get(user_id=userid)
     is_admin = userprof.admin_status
     #NOTE: user profile ID can be different from request.user.id because if add superuser but don't create user profile
     authId = userprof.id
 
-
-    userid = request.user.id
     #selects my reports and public reports
     q1 = Report.objects.filter(authorId_id = authId)
     q2 = Report.objects.filter(access_type = 0)
@@ -62,12 +60,11 @@ def adminportal(request):
             admin_user_form = AdminUserForm(data=request.POST)
             if admin_user_form.is_valid:
                 userID = request.POST['user']
-                user = UserProfile.objects.get(user_id=userID)
+                user = UserProfile.objects.get(id=userID)
                 user.admin_status = True
                 user.save()
                 admin_user_form = AdminUserForm()
                 create_group_form = CreateGroupForm()
-                search_form = SearchForm()
             else: #form is not valid
                 print (admin_user_form.errors)
         if 'submitGroup' in request.POST:
@@ -77,17 +74,15 @@ def adminportal(request):
                 group.save()
                 create_group_form = CreateGroupForm()
                 admin_user_form = AdminUserForm()
-                search_form = SearchForm()
             else:
                 print(create_group_form.errors)
     else: #request method is not POST
         admin_user_form = AdminUserForm()
         create_group_form = CreateGroupForm()
-        search_form = SearchForm()
-        all_reports = Report.objects.all()
-        all_groups = Group.objects.all()
+    all_reports = Report.objects.all()
+    all_groups = Group.objects.all()
 
-    context_dict = {'search_form': search_form, 'all_groups': all_groups, 'all_reports': all_reports, 'reports': reports, 'groups': mygroups, 'admin_user_form': admin_user_form, 'admin_status': is_admin, 'create_group_form': create_group_form}
+    context_dict = {'all_groups': all_groups, 'all_reports': all_reports, 'reports': reports, 'groups': mygroups, 'admin_user_form': admin_user_form, 'admin_status': is_admin, 'create_group_form': create_group_form}
 
     return render_to_response('SecureWitness/adminportal.html', context_dict, context)
 
@@ -98,14 +93,12 @@ def index(request):
     HttpResponse(request.user.id)
     if request.user.is_authenticated():
 
-        userID = request.user.id
-        userprof = UserProfile.objects.get(user_id=userID)
+        userid = request.user.id
+        userprof = UserProfile.objects.get(user_id=userid)
         is_admin = userprof.admin_status
         #NOTE: user profile ID can be different from request.user.id because if add superuser but don't create user profile
         authId = userprof.id
 
-
-        userid = request.user.id
         #selects my reports and public reports
         q1 = Report.objects.filter(authorId_id = authId)
         q2 = Report.objects.filter(access_type = 0)
@@ -135,7 +128,6 @@ def index(request):
             if group not in mygroups:
                 request_groups.append(group)
         
-
         search_form = SearchForm()
         context_dict = {'search_form': search_form, 'reports': reports, 'groups': mygroups, 'request_groups': request_groups, 'admin_status': is_admin}
 
@@ -154,6 +146,35 @@ def results(request):
     is_admin = userprof.admin_status
     
     context_dict = {'admin_status': is_admin}
+    context_dict['as_post'] = False
+    
+    if request.method == 'POST':
+        context_dict['as_post'] = True
+        if request.POST['search_field'] == "authorName":
+            query = request.POST['text']
+            context_dict['query'] = query
+            reports = Report.objects.filter(authorName__icontains=query)
+        if request.POST['search_field'] == "title":
+            query = request.POST['text']
+            context_dict['query'] = query
+            reports = Report.objects.filter(title__icontains=query)
+        if request.POST['search_field'] == "shortDesc":
+            query = request.POST['text']
+            context_dict['query'] = query
+            reports = Report.objects.filter(shortDesc__icontains=query)
+        if request.POST['search_field'] == "locationOfIncident":
+            query = request.POST['text']
+            context_dict['query'] = query
+            reports = Report.objects.filter(locationOfIncident__icontains=query)
+        if request.POST['search_field'] == "keywords":
+            query = request.POST['text']
+            context_dict['query'] = query
+            reports = Report.objects.filter(keywords__icontains=query)
+        context_dict['results'] = reports
+    
+    search_form = SearchForm()
+    context_dict['search_form'] = search_form
+    
     return render_to_response('SecureWitness/results.html', context_dict, context)
     
 
@@ -391,6 +412,7 @@ def grant_access(request, curr_user):
 
 @login_required
 def group(request, usergroup):
+
     authorId = request.user #gets logged in user
 
     context = RequestContext(request)
@@ -398,11 +420,41 @@ def group(request, usergroup):
     userID = request.user.id
     userprof = UserProfile.objects.get(user_id=userID)
     is_admin = userprof.admin_status
-    
+
     group_list = Group.objects.all()
     context_dict = {'group_list': group_list, 'admin_status': is_admin}
     g = Group.objects.get(name=usergroup)
     context_dict['group'] = g
+
+    if is_admin:
+        if request.method == 'POST':
+            if 'submitAdd' in request.POST:
+                add_member_form = AddMemberForm(g, data=request.POST)
+                if add_member_form.is_valid:
+                    m = request.POST['members']
+                    mem = User.objects.get(username = m)
+                    g.members.add(mem)
+                    r = Request.objects.filter(requester = m, group = g)
+                    for req in r:
+                        req.delete()
+                else: #form is not valid
+                    print (add_member_form.errors)
+            if 'submitRemove' in request.POST:
+                remove_member_form = RemoveMemberForm(g, data=request.POST)
+                if remove_member_form.is_valid:
+                    m = request.POST['members']
+                    mem = User.objects.get(username = m)
+                    g.members.remove(mem)
+                else:
+                    print(remove_member_form.errors)
+        else: #request method is not POST
+            pass
+
+        add_member_form = AddMemberForm(g)
+        remove_member_form = RemoveMemberForm(g)
+        context_dict['add_member_form'] = add_member_form
+        context_dict['remove_member_form'] = remove_member_form
+    
     members = [val for val in g.members.all() if val in g.members.all()]
 
     if authorId in members:
@@ -424,7 +476,8 @@ def group(request, usergroup):
     context_dict['request_already_made'] = request_already_made
     #/end check
 
-    if request.method == 'POST':
+    #if request.method == 'POST':
+    if 'submit' in request.POST:
         #getting data for the only purpose of validation
         request_form = RequestAccessForm(data=request.POST)
         #validation
@@ -461,7 +514,11 @@ def group(request, usergroup):
     #requests = [val for val in r.requester.all() if val in r.requester.all()]
 
     #prints out all requests that have been made to the group  #TODO: change Request model charfield to foreignkey with user, make form in html group to ask for access
-
+    
+    
+    context_dict['add_member_form'] = add_member_form
+    context_dict['remove_member_form'] = remove_member_form
+    return HttpResponse(remove_member_form)
 
     return render_to_response('SecureWitness/group.html', context_dict, context)
 

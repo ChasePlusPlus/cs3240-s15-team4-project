@@ -60,6 +60,25 @@ class EditReportForm(forms.Form):
     keywords = forms.CharField(required = False)#these do not need to be populated
     user_perm = forms.BooleanField(required = False)
     
+class AddMemberForm(forms.Form):
+    
+    def __init__(self, group, *args, **kwargs):
+        super(AddMemberForm, self).__init__(*args, **kwargs)
+        users = User.objects.all()
+        nonMembs = []
+        for user in users:
+            if user not in group.members.all():
+                nonMembs.append(user)
+        self.fields['members'] = forms.ChoiceField(
+            choices=[(o, str(o)) for o in nonMembs])
+
+class RemoveMemberForm(forms.Form):
+    
+    def __init__(self, group, *args, **kwargs):
+        super(RemoveMemberForm, self).__init__(*args, **kwargs)
+        self.fields['members'] = forms.ChoiceField(
+            choices=[(o, str(o)) for o in group.members.all()])
+
 class CreateGroupForm(forms.ModelForm):
     
     class Meta:
@@ -68,7 +87,8 @@ class CreateGroupForm(forms.ModelForm):
 
 class SearchForm(forms.Form):
 
-    CHOICES = (('title', 'Title'), ('shortDesc', 'Short Description'), ('locationOfIncident', 'Location of Incident'), ('keywords', 'Keywords'))
+    CHOICES = (('authorName', 'Author'), ('title', 'Title'), ('shortDesc', 'Subject'), ('detailsDesc', 'Description'), ('locationOfIncident', 'Location of Incident'), ('keywords', 'Keywords'))
     
     search_field = forms.ChoiceField(choices=CHOICES)
     text = forms.CharField()
+

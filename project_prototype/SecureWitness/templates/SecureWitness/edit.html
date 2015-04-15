@@ -1,0 +1,27 @@
+<form action="{% url 'SecureWitness:edit' reportID %}" method="post" enctype="multipart/form-data">
+{% csrf_token %}
+Report Title: {{form.title}} </br>
+Report Subject : {{form.shortDesc}} </br>
+Description: </br>{{form.detailsDesc}} </br>
+Date of Incident (optional): {{form.dateOfIncident}} </br>
+Incident Location (optional): {{form.locationOfIncident}} </br>
+Keywords (optional): {{form.keywords}} </br>
+<!--Report Author: {{form.author}} </br>-->
+Would you like to make this report private? {{form.user_perm}}</br>
+File List:
+{% if files %}
+	<ul>
+	{% for file in files %}
+		<li>{{file.file}}</li>
+	{% endfor %}
+	<ul>
+	</br>
+<input type = "submit" value = "Delete File(s)" name = "deleteFile"/>
+{% else %}
+	No files associated with this report.</br>
+{% endif %}
+
+<input type = "submit" value = "Add File(s)" name = "addFile"/>
+<input type = "submit" value = "Submit Edits to Report" name = "submit"/>
+
+</form>

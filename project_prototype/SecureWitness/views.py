@@ -8,8 +8,9 @@ from django.template import RequestContext, loader
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
-from SecureWitness.forms import FileUploadForm,UserForm, UserProfileForm, ReportUploadForm, AdminUserForm, RequestAccessForm, GrantAccessForm, MakeFolderForm
+from SecureWitness.forms import FileUploadForm,UserForm, UserProfileForm, ReportUploadForm, AdminUserForm, RequestAccessForm, GrantAccessForm, EditReportForm, MakeFolderForm, AddToFolderForm, ChangeFolderNameForm
 from SecureWitness.models import File, Group, Report, UserProfile, Request, Folder
+
 import datetime
 
 
@@ -44,7 +45,7 @@ def index(request):
 			
 		#add the reports that were selected to the query
         for report in reportIdList:
-            q5 = Report.objects.filter(title = report)
+            q5 = Report.objects.filter(id = report)
             reports = reports | q5
         
 
@@ -59,7 +60,7 @@ def index(request):
 
         if is_admin:
             if request.method == 'POST':
-                if 'submit_admin' in request.data:
+                if 'submit_admin' in request.POST:
                     admin_user_form = AdminUserForm(data=request.POST)
                     if admin_user_form.is_valid:
                         userID = request.POST['user']
@@ -70,31 +71,42 @@ def index(request):
 
                     else: #form is not valid
                         print (admin_user_form.errors)
-                
+                else: #request method is not POST ####new addition
+                    admin_user_form = AdminUserForm()
+
             else: #request method is not POST
                 admin_user_form = AdminUserForm()
             all_reports = Report.objects.all()
             all_groups = Group.objects.all()
 
-            context_dict = {'all_groups': all_groups, 'all_reports': all_reports, 'reports': reports, 'groups': mygroups, 'admin_user_form':admin_user_form, 'admin_status': is_admin}
+            context_dict = {'all_groups': all_groups, 'all_reports': all_reports, 'reports': reports,
+                            'groups': mygroups, 'admin_user_form': admin_user_form, 'admin_status': is_admin,
+                            'current_user': request.user.username}
         
         else: #user is not admin
            
-            context_dict = {'reports': reports, 'groups': mygroups, 'request_groups': request_groups}
+            context_dict = {'reports': reports, 'groups': mygroups, 'request_groups': request_groups,
+                            'current_user': request.user.username}
 
         #NEW CODE for folder creation not yet tested
         if request.method == 'POST':
-            if 'submit_make_folder' in request.data:
+            if 'submit_make_folder' in request.POST:
                 make_folder_form = MakeFolderForm(data=request.POST)
                 if make_folder_form.is_valid:
-                    foldername = request.POST['folder_name']
-                    new_folder = Folder(name=foldername, owner=request.user.username)
+                    foldername = request.POST.get('folder_name', False)
+                    new_folder = Folder(name=foldername, owner=request.user)
                     new_folder.save()
 
                 else: #form is not valid
                     print (make_folder_form.errors)
             else: #request method is not POST
                 make_folder_form = MakeFolderForm()
+        else: #request method is not POST
+                make_folder_form = MakeFolderForm()
+        context_dict['make_folder_form'] = make_folder_form
+        my_folders = [val for val in Folder.objects.all() if val.owner == request.user]
+        #my_folders = Folder.objects.all(owner=request.user)
+        context_dict['my_folders'] = my_folders
 
     else:
         context_dict = {}
@@ -194,7 +206,7 @@ def uploadView(request):
             User.profile = property(lambda u: UserProfile.objects.get_or_create(user=u)[0])
             name = request.user.get_full_name()
             titleNoWS = request.POST['title'].rstrip()
-            formattedTitle = titleNoWS.replace(' ', '_')
+            #formattedTitle = titleNoWS.replace(' ', '_')
             new_Report = Report(authorId = request.user.profile, authorName = name, title = titleNoWS, shortDesc = request.POST['shortDesc'], detailsDesc = request.POST['detailsDesc'], dateOfIncident = request.POST['dateOfIncident'], locationOfIncident = request.POST['locationOfIncident'], keywords = request.POST['keywords'], access_type = request.POST.get('user_perm', False), timestamp = str(datetime.datetime.now()))
             new_Report.save()
 
@@ -204,7 +216,7 @@ def uploadView(request):
                 #render(request, 'SecureWitness/reportDetails.html', {'report': new_Report.title})
             elif 'upload' in request.POST:
 		        #direct to add files format
-                return HttpResponseRedirect(reverse('SecureWitness:FileUpload', args=(formattedTitle,)))
+                return HttpResponseRedirect(reverse('SecureWitness:FileUpload', args=(new_Report.id,)))
         else:
 			#If there is an issue with uploading a file let the user know
             return HttpResponse("Invalid File Upload details... Please be sure you are filling out the appropriate fields.")
@@ -240,16 +252,6 @@ def user_portal(request, curr_user):
             group = Group.objects.get(name=selection)
 
             context_dict['group'] = group
-            #context_dict['print'] =add_user
-            #group.members.add(add_user)   #adding user to group requested works!
-            #group.save()
-			#should we put here that the reports of that user all are then given permission to group
-			
-            #now to delete the request
-            #delete_request = Request.objects.get(requester=curr_user, group=group)
-            #delete_request.delete()
-
-
             members = [g.username for g in group.members.all()]
 
             granted = True
@@ -257,7 +259,6 @@ def user_portal(request, curr_user):
             if request.user.username in members:
                 #validation to check if the current user has the authority to grant the access request
                 context_dict['group'] = group
-                #context_dict['print'] =add_user
                 group.members.add(add_user)   #adding user to group requested works!
                 group.save()
                 #now to delete the request
@@ -312,8 +313,58 @@ def request_access(request, usergroup):
 
     return render_to_response('SecureWitness/request.html',{'group': g, 'request_form': request_form, 'requested': requested},context)
 
-def grant_access(request, curr_user):
-    pass
+@login_required
+def folder(request, curr_folder):
+    context = RequestContext(request)
+    context_dict = {'curr_folder': curr_folder}
+    username = request.user.first_name + " " + request.user.last_name
+    add_folder = Folder.objects.get(name=curr_folder)
+    context_dict['folder_id'] = add_folder.id
+    reports = Report.objects.all().filter(folder=add_folder.id)
+    context_dict['folder_reports'] = reports
+    if request.method == 'POST':
+        if 'submit_add_to_folder' in request.POST:
+            add_form = AddToFolderForm(username, data=request.POST)
+            if add_form.is_valid():
+                selection = add_form.cleaned_data['reports']  #gets selected option
+                add_folder = Folder.objects.get(name=curr_folder)
+                report = Report.objects.get(id=selection)
+                report.folder = add_folder.id
+                report.save(force_update=True)
+                reports = Report.objects.all().filter(folder=report.folder)
+                #reports = [r for r in Report.objects.all(folder=add_folder.id)]
+                context_dict['report'] = report
+                context_dict['folder_reports'] = reports
+
+                change_form = ChangeFolderNameForm()
+                #return HttpResponseRedirect(reverse('SecureWitness:folder', args=curr_folder+"/"))
+                #todo implement a way to refresh options after adding a file to the folder
+            else:
+                print(add_form.errors)
+        elif 'submit_change_name' in request.POST:
+            change_form = ChangeFolderNameForm(data=request.POST)
+            if change_form.is_valid():
+                new_name = str(request.POST['folder_name'].rstrip())
+                new_name.replace(" ", "_")
+                add_folder.name = new_name
+                add_folder.save()
+
+                add_form = AddToFolderForm(username)
+                return HttpResponseRedirect(reverse('SecureWitness:index'))
+
+            else:
+                print(change_form.errors)
+        else:
+            add_form = AddToFolderForm(username)
+            change_form = ChangeFolderNameForm()
+    else:
+        add_form = AddToFolderForm(username)
+        change_form = ChangeFolderNameForm()
+
+    context_dict['add_to_folder_form'] = add_form
+    context_dict['change_folder_name_form'] = change_form
+    return render_to_response('SecureWitness/folder.html', context_dict, context)
+
 
 @login_required
 def group(request, usergroup):
@@ -398,26 +449,31 @@ def report(request, selectedReport):
 	#need to get rid of extra space AND encode url
     #titleRequest = selectedReport.replace('_', ' ')
 	#context_dict['titleVal'] = titleRequest
-    selectedReport2 = selectedReport.replace("_"," ")
-    report = Report.objects.filter(title=selectedReport2)
+    #selectedReport2 = selectedReport.replace("_"," ")
+    report = Report.objects.get(id=selectedReport)
     context_dict['report'] = report
+    if request.user.get_full_name() == report.authorName:
+        context_dict['isAuthor'] = 1
+    else:
+        context_dict['isAuthor'] = 0
 
     #get files associated with report
-    files = File.objects.filter(report_id = selectedReport2)
+    files = File.objects.filter(report_id = selectedReport)
     context_dict['files'] = files
-	
-	
+  
+
+    	
     return render_to_response('SecureWitness/reportDetails.html', context_dict, context)
 
-def FileUpload(request, reportTitle):
+def FileUpload(request, reportID):
 	#return HttpResponse(reportTitle)
     if request.method == 'POST':
         #if form is valid get file info and add to the database
         form = FileUploadForm(request.POST, request.FILES)
         if form.is_valid():            
             #return HttpResponse("VALID")
-            reportTitle2 = reportTitle.replace("_", " ")
-            reportSelected = Report.objects.get(title = reportTitle2)
+            #reportTitle2 = reportTitle.replace("_", " ")
+            reportSelected = Report.objects.get(id = reportID)
             newFile = File(file = request.FILES['file'], report = reportSelected)
             newFile.save()
         #if 'done then return to index page
@@ -434,8 +490,72 @@ def FileUpload(request, reportTitle):
     else:
         form = FileUploadForm()
         
-    data = {'form': form, 'reportTitle': reportTitle}
+    data = {'form': form, 'reportID': reportID}
 	#return render(request, 'polls/upload.html', data)
     return render_to_response('SecureWitness/FileUpload.html', data, context_instance=RequestContext(request))
+
+def editReport(request, reportID):
+    #reportTitle2 = reportTitle.replace("_", " ")
+    reportSelected = Report.objects.get(id = reportID)
+    #reportID = reportSelected.id
+
+    if request.method == 'POST':
+		#form that holds the upload file buttons
+        form = EditReportForm(request.POST, request.FILES)
+        if form.is_valid():
+            titleNoWS = request.POST['title'].rstrip()
+            #return HttpResponse(reportSelected.title +" = "+ titleNoWS)
+            reportSelected.title = titleNoWS
+            reportSelected.shortDesc = request.POST['shortDesc']
+            reportSelected.detailsDesc = request.POST['detailsDesc']
+            reportSelected.dateOfIncident = request.POST['dateOfIncident']
+            reportSelected.locationOfIncident = request.POST['locationOfIncident']
+            reportSelected.keywords = request.POST['keywords']
+            reportSelected.access_type = request.POST.get('user_perm', False)
+            reportSelected.save(force_update = True)
+			
+            if 'addFile' in request.POST:
+                return HttpResponseRedirect(reverse('SecureWitness:FileUpload', args=(reportSelected.id,)))
+            elif 'deleteFile' in request.POST:
+                return HttpResponseRedirect(reverse('SecureWitness:DeleteFile', args = (reportID)))
+            else:
+                return HttpResponseRedirect(reverse('SecureWitness:index'))
+    else:
+	    #insert form values as default to be shown
+        files = File.objects.filter(report_id = reportID)
+        form = EditReportForm(initial = {'title': reportSelected.title, 'shortDesc': reportSelected.shortDesc, 'detailsDesc': reportSelected.detailsDesc, 'dateOfIncident': reportSelected.dateOfIncident, 'locationOfIncident': reportSelected.locationOfIncident, 'keywords': reportSelected.keywords, 'user_perm': reportSelected.user_perm} )
     
+    context_dict = {'reportID': reportID, 'form': form, 'files' : files}
+    return render_to_response('SecureWitness/edit.html', context_dict, context_instance=RequestContext(request))
+
+
+def deleteReport(request, reportID):
+    context = RequestContext(request)
+    #reportTitle2 = reportTitle.replace("_", " ")
+    reportSelected = Report.objects.get(id = reportID).delete()
+	
+    return HttpResponseRedirect(reverse('SecureWitness:index'))
+
+
+def deleteFolder(request, folderID):
+    context = RequestContext(request)
+    reports = Report.objects.all().filter(folder=folderID)
+    for rep in reports:
+        rep.delete()
+    reportSelected = Folder.objects.get(id = folderID).delete()
+
+    return HttpResponseRedirect(reverse('SecureWitness:index'))
+
+def deleteFile(request, reportID):
+    #files = File.objects.filter(report_id = reportID)
+    if request.method == 'POST':
+        #form = deleteFilesForm(request.POST, request.FILES)
+        fileID = request.POST['file']
+        deletedFile = File.objects.get(id = fileID).delete()
+        return HttpResponseRedirect(reverse('SecureWitness:index'))
+    else:
+        files = File.objects.filter(report_id = reportID)
+		#form = deleteFilesForm(reportID)
+    context_dict = {'reportID': reportID, 'files':files}
+    return render_to_response('SecureWitness/deleteFile.html', context_dict, context_instance=RequestContext(request))
 

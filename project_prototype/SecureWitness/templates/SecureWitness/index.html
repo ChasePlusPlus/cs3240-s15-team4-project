@@ -16,12 +16,23 @@
           <button class="btn btn-default" type="button">Go!</button>
 	</span>
       </div><!-- /input-group -->
-      
+      <a href="/SecureWitness/userportal/{{ current_user }}/">Link to User Portal</a>
+      <h2>My Folders</h2>
+      {% if my_folders %}
+      <ul>
+	{% for folder in my_folders %}
+	<li><a href="/SecureWitness/folder/{{folder.name}}">{{ folder.name }}</a></li>
+	{% endfor %}
+      </ul>
+      {% else %}
+      <p>No folders.</p>
+      {% endif %}
+
       <h2>My Reports</h2>
       {% if reports %}
       <ul>
 	{% for report in reports %}
-	<li><a href="/SecureWitness/report/{{report.title.split|join:'_'}}">{{ report.title }}</a></li>
+	<li><a href="/SecureWitness/report/{{report.id}}">{{ report.title }}</a></li>
 	{% endfor %}
       </ul>
       {% else %}
@@ -39,6 +50,16 @@
       {% else %}
       <p>No groups.</p>
       {% endif %}
+          </form>
+
+        <h2>Create New Folder</h2>
+		 <form id="make_folder_form" method="post" action="/SecureWitness/" enctype="multipart/form-data">
+    	{% csrf_token %}
+
+	    {{ make_folder_form.as_p }}
+
+	    <input type="submit" name="submit_make_folder" value="Make Folder" />
+         </form>
 
 
       
@@ -59,12 +80,13 @@
       {% if all_reports %}
       <ul>
 	{% for report in all_reports %}
-	<li><a href="/SecureWitness/report/{{report.title.split|join:'_'}}">{{ report.title }}</a></li>
+	<li><a href="/SecureWitness/report/{{report.id}}">{{ report.title }}</a></li>
 	{% endfor %}
       </ul>
       {% else %}
       <p>No reports.</p>
       {% endif %}
+
       {% endif %}
       
       
@@ -92,22 +114,14 @@
 		{{ admin_user_form.as_p }}
 
 		<input type="submit" name="submit_admin" value="Promote" />
-		</form>
-		
+
+
       {% endif %}
       {% else %}
       This is the home page.
       {% endif %}
 
-        <form id="make_folder_form" method="post" action="/SecureWitness/" enctype="multipart/form-data">
-    	{% csrf_token %}
 
-	<!-- as_p method wraps each element in a paragraph element.
-	     Each element appears on a new line. -->
-	    {{ make_folder_form.as_p }}
-
-	    <input type="submit" name="submit_make_folder" value="Make Folder" />
-         </form>
 
 
 

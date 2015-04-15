@@ -40,11 +40,11 @@ class Request(models.Model):
 
 class Report(models.Model):
     #id = models.IntegerField(unique=True) #previously had primary key in here
-    title = models.CharField(max_length=300, primary_key=True, default = '')
+    title = models.CharField(max_length=300, default = '')
     authorId = models.ForeignKey(UserProfile, blank=True)
     authorName = models.CharField(max_length = 30, default = '', blank = True)
-    folder = models.ForeignKey(Folder, blank=True)
-    #user_perm = models.TextField #String of users permitted to access the file
+    #folder = models.ForeignKey(Folder, blank=True)
+    folder = models.IntegerField(default='0', blank=True)
     user_perm = models.TextField(default='', blank=True)
     group_perm = models.ManyToManyField(Group) #String of groups permitted to access the file
     access_type = models.BooleanField(default=False) #False -> Public file, True -> Private file

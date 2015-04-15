@@ -10,13 +10,20 @@
     {% block body_block %}
     <div class="hero-unit">
       {% if user.is_authenticated %}
+      <a href="/SecureWitness/userportal/{{ current_user }}/">Link to User Portal</a>
+
       <div class="input-group">
 	<input type="text" class="form-control" placeholder="Search for...">
 	<span class="input-group-btn">
           <button class="btn btn-default" type="button">Go!</button>
 	</span>
       </div><!-- /input-group -->
-      <a href="/SecureWitness/userportal/{{ current_user }}/">Link to User Portal</a>
+          <form id="search_form" method="post" action="/SecureWitness/results/" enctype="multipart/form-data">
+	    {% csrf_token %}
+    	{{ search_form.as_table }}
+	    <input type="submit" class="btn" name="submitSearch" value="Go" />
+         </form>
+
       <h2>My Folders</h2>
       {% if my_folders %}
       <ul>
@@ -27,6 +34,7 @@
       {% else %}
       <p>No folders.</p>
       {% endif %}
+
 
       <h2>My Reports</h2>
       {% if reports %}
@@ -50,7 +58,7 @@
       {% else %}
       <p>No groups.</p>
       {% endif %}
-          </form>
+         <!-- </form>-->
 
         <h2>Create New Folder</h2>
 		 <form id="make_folder_form" method="post" action="/SecureWitness/" enctype="multipart/form-data">
@@ -61,8 +69,6 @@
 	    <input type="submit" name="submit_make_folder" value="Make Folder" />
          </form>
 
-
-      
       <h2>Request Groups</h2>
       {% if request_groups %}
 	  <ul>
@@ -73,60 +79,55 @@
       {% else %}
       <p>No groups to send requests to join.</p>
       {% endif %}
-      
+
       
       {% if admin_status %}
       <h2>All Reports</h2>
-      {% if all_reports %}
-      <ul>
-	{% for report in all_reports %}
-	<li><a href="/SecureWitness/report/{{report.id}}">{{ report.title }}</a></li>
-	{% endfor %}
-      </ul>
-      {% else %}
-      <p>No reports.</p>
-      {% endif %}
+          {% if all_reports %}
+          <ul>
+        {% for report in all_reports %}
+        <li><a href="/SecureWitness/report/{{report.id}}">{{ report.title }}</a></li>
+        {% endfor %}
+          </ul>
+          {% else %}
+          <p>No reports.</p>
+          {% endif %}
 
       {% endif %}
       
       
       {% if admin_status %}
       <h2>All Groups</h2>
-      {% if all_groups %}
-      <ul>
-	{% for group in all_groups %}
-	<li><a href="/SecureWitness/group/{{ group.name }}">{{ group.name }}</a></li>
-	{% endfor %}
-      </ul>
-      {% else %}
-      <p>No Groups.</p>
-      {% endif %}
+          {% if all_groups %}
+          <ul>
+        {% for group in all_groups %}
+        <li><a href="/SecureWitness/group/{{ group.name }}">{{ group.name }}</a></li>
+        {% endfor %}
+          </ul>
+          {% else %}
+          <p>No Groups.</p>
+          {% endif %}
       {% endif %}
       
       
       {% if admin_status %}
 
       <h2>Promote To Admin</h2>
-      
-	  
+
 		<form id="admin_user_form" method="post" action="/SecureWitness/" enctype="multipart/form-data">
 		{% csrf_token %}
 		{{ admin_user_form.as_p }}
 
 		<input type="submit" name="submit_admin" value="Promote" />
-
+        </form>
 
       {% endif %}
+
       {% else %}
       This is the home page.
       {% endif %}
 
-
-
-
-
-
-    </div>
+        </div>
     {% endblock %}
   </body>
 </html>

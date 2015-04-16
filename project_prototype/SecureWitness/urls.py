@@ -24,4 +24,5 @@ urlpatterns = patterns('',
 	url(r'^deleteFolder/(?P<folderID>\w+)/$', views.deleteFolder, name='deleteFolder'),
 	url(r'^download/(?P<fileID>\w+)/$', views.download, name='downloadFile'),
 	url(r'^copyReport/(?P<reportID>\w+)/$', views.copyReport, name='copyReport')
-    )+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) #puts in proper folder
+	#url(r'^copyFolder/(?P<folderID>\w+)/$', views.copyFolder, name='copyFolder')
+)+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) #puts in proper folder

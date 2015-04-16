@@ -11,6 +11,7 @@ from django.core.urlresolvers import reverse
 from SecureWitness.models import File, Group, Report, UserProfile, Request, Folder
 from SecureWitness.forms import AddMemberForm, RemoveMemberForm, FileUploadForm, SearchForm, UserForm, UserProfileForm, ReportUploadForm, AdminUserForm, RequestAccessForm, GrantAccessForm, CreateGroupForm, EditReportForm, AddToFolderForm, ChangeFolderNameForm, MakeFolderForm
 import datetime
+import mimetypes
 
 
 #class RequestForm(forms.Form):
@@ -179,7 +180,7 @@ def index(request):
         else: #request method is not POST
             make_folder_form = MakeFolderForm()
 
-        search_form = SearchForm()
+        search_form = SearchForm(initial = {"text":"Search for..."})
         context_dict = {'search_form': search_form, 'reports': reports, 'myreports':myreports, 'groups': mygroups, 'request_groups': request_groups, 'admin_status': is_admin}
 
         context_dict['make_folder_form'] = make_folder_form
@@ -229,7 +230,7 @@ def results(request):
             reports = Report.objects.filter(keywords__icontains=query)
         context_dict['results'] = reports
     
-    search_form = SearchForm()
+    search_form = SearchForm(initial = {"text":"SearchForm"})
     context_dict['search_form'] = search_form
     
     return render_to_response('SecureWitness/results.html', context_dict, context)
@@ -663,7 +664,14 @@ def FileUpload(request, reportID):
             #return HttpResponse("VALID")
             #reportTitle2 = reportTitle.replace("_", " ")
             reportSelected = Report.objects.get(id = reportID)
-            newFile = File(file = request.FILES['file'], report = reportSelected)
+            fileUploaded = request.FILES['file']
+			
+			#guess MimeType and add to model
+            mimetypes.init()
+            mimeType = mimetypes.guess_type(fileUploaded.name)
+            fileTypeString = mimeType[0]
+			
+            newFile = File(file = fileUploaded, report = reportSelected, fileType = fileTypeString)
             newFile.save()
         #if 'done then return to index page
             if 'done' in request.POST:
@@ -748,3 +756,14 @@ def deleteFile(request, reportID):
     context_dict = {'reportID': reportID, 'files':files}
     return render_to_response('SecureWitness/deleteFile.html', context_dict, context_instance=RequestContext(request))
 
+def download(request, fileID):
+    #get filename
+    file = File.objects.get(id = fileID)
+    filename = file.file.name
+    type = file.fileType
+    response = HttpResponse(request, content_type= type)
+	
+	#concatenate filename with this
+    response['Content-Disposition'] = 'attachment; filename=' + filename;
+
+    return response

@@ -733,6 +733,22 @@ def deleteReport(request, reportID):
 	
     return HttpResponseRedirect(reverse('SecureWitness:index'))
 
+def copyReport(request, reportID):
+    #return HttpResponse(request.user.profile)
+    context = RequestContext(request)
+    #reportTitle2 = reportTitle.replace("_", " ")
+    reportSelected = Report.objects.get(id = reportID)
+    copyOfReport = Report(authorId = reportSelected.authorId, authorName = reportSelected.authorName, title = reportSelected.title + "(copy)", shortDesc = reportSelected.shortDesc, detailsDesc = reportSelected.detailsDesc, dateOfIncident = reportSelected.dateOfIncident, locationOfIncident = reportSelected.locationOfIncident, keywords = reportSelected.keywords, access_type = reportSelected.access_type, timestamp = str(datetime.datetime.now()))
+    copyOfReport.save()
+    reportUploaded = Report.objects.get(id = copyOfReport.id)
+    filesOfReport = File.objects.filter(report_id = reportID)
+    
+    for files in filesOfReport:
+        newFile = File(file = files.file, report = reportUploaded, fileType = files.fileType)
+        newFile.save()
+	
+    return HttpResponseRedirect(reverse('SecureWitness:index'))
+
 
 def deleteFolder(request, folderID):
     context = RequestContext(request)

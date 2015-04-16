@@ -24,11 +24,13 @@ def adminportal(request):
     is_admin = userprof.admin_status
     #NOTE: user profile ID can be different from request.user.id because if add superuser but don't create user profile
     authId = userprof.id
-
+    
     #selects my reports and public reports
     q1 = Report.objects.filter(authorId_id = authId)
-    q2 = Report.objects.filter(access_type = 0)
-    reports = q1 |  q2
+    
+    q2 = Report.objects.filter(access_type = 0).exclude(authorId_id = authId)
+    myreports = q1
+    reports = q2
         
     #selects groups that the user is in
     mygroups = Group.members.through.objects.filter(user_id = userid).values_list('group_id', flat=True)
@@ -81,7 +83,7 @@ def adminportal(request):
     all_reports = Report.objects.all()
     all_groups = Group.objects.all()
 
-    context_dict = {'all_groups': all_groups, 'all_reports': all_reports, 'reports': reports, 'groups': mygroups, 'admin_user_form': admin_user_form, 'admin_status': is_admin, 'create_group_form': create_group_form}
+    context_dict = {'all_groups': all_groups, 'all_reports': all_reports, 'reports': reports, 'myreports' : myreports,'groups': mygroups, 'admin_user_form': admin_user_form, 'admin_status': is_admin, 'create_group_form': create_group_form}
 
     return render_to_response('SecureWitness/adminportal.html', context_dict, context)
 
@@ -101,8 +103,10 @@ def index(request):
 
         #selects my reports and public reports
         q1 = Report.objects.filter(authorId_id = authId)
-        q2 = Report.objects.filter(access_type = 0)
-        reports = q1 |  q2
+        q2 = Report.objects.filter(access_type = 0).exclude(authorId_id = authId)
+        myreports = q1
+        
+        reports = q2
         
         #selects groups that the user is in
         mygroups = Group.members.through.objects.filter(user_id = userid).values_list('group_id', flat=True)
@@ -115,9 +119,9 @@ def index(request):
             
         #add the reports that were selected to the query
         for report in reportIdList:
-            q5 = Report.objects.filter(id = report)
+            q5 = Report.objects.filter(id = report).exclude(authorId_id = authId)
             reports = reports | q5
-        
+        #return HttpResponse(reports)
         #get all the groups saved that the member is not a part of	
         notMyGroups = Group.members.through.objects.exclude(user_id = userid).values_list('group_id', flat=True).distinct()
         request_groups = []
@@ -150,15 +154,15 @@ def index(request):
             all_reports = Report.objects.all()
             all_groups = Group.objects.all()
 
-            context_dict = {'all_groups': all_groups, 'all_reports': all_reports, 'reports': reports,
+            context_dict = {'all_groups': all_groups, 'all_reports': all_reports, 'reports': reports, 'myreports':myreports,
                             'groups': mygroups, 'admin_user_form': admin_user_form, 'admin_status': is_admin,
                             'current_user': request.user.username}
-        
+            
         else: #user is not admin
            
-            context_dict = {'reports': reports, 'groups': mygroups, 'request_groups': request_groups,
+            context_dict = {'reports': reports, 'myreports': myreports, 'groups': mygroups, 'request_groups': request_groups,
                             'current_user': request.user.username}
-
+            #return HttpResponse(context_dict['myreports'])
         #NEW CODE for folder creation not yet tested
         if request.method == 'POST':
             if 'submit_make_folder' in request.POST:
@@ -176,7 +180,7 @@ def index(request):
             make_folder_form = MakeFolderForm()
 
         search_form = SearchForm()
-        context_dict = {'search_form': search_form, 'reports': reports, 'groups': mygroups, 'request_groups': request_groups, 'admin_status': is_admin}
+        context_dict = {'search_form': search_form, 'reports': reports, 'myreports':myreports, 'groups': mygroups, 'request_groups': request_groups, 'admin_status': is_admin}
 
         context_dict['make_folder_form'] = make_folder_form
         my_folders = [val for val in Folder.objects.all() if val.owner == request.user]

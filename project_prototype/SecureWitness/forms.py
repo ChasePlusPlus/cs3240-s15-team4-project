@@ -27,6 +27,14 @@ class AddToFolderForm(forms.Form):
             choices=[(o.id, str(o)) for o in Report.objects.filter(authorName=user, folder=0)])    #using id instead of o.title to ensure unique reports
 
 
+class RemoveFromFolderForm(forms.Form):
+
+    def __init__(self, user, folder, *args, **kwargs):
+        super(RemoveFromFolderForm, self).__init__(*args, **kwargs)
+        self.fields['reports'] = forms.ChoiceField(
+            choices=[(o.id, str(o)) for o in Report.objects.filter(authorName=user, folder=folder)])    #using id instead of o.title to ensure unique reports
+
+
 class MakeFolderForm(forms.Form):
     folder_name = forms.CharField(max_length=120)
     class Meta:

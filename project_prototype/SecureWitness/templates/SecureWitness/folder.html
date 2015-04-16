@@ -28,7 +28,17 @@
                 {{ add_to_folder_form.as_p }}
 
             <input type="submit" name="submit_add_to_folder" value="Add Report" />
-              </form>
+        </form>
+
+        <p>Remove report from this folder: </p>
+        <form id="remove_from_folder_form" method="post" action="/SecureWitness/folder/{{ curr_folder }}/"
+                enctype="multipart/form-data">
+                {% csrf_token %}
+
+                {{ remove_from_folder_form.as_p }}
+
+            <input type="submit" name="submit_remove_from_folder" value="Remove Report" />
+        </form>
 
         <p>Change folder name: </p>
         <form id="change_folder_name_form" method="post" action="/SecureWitness/folder/{{ curr_folder }}/"
@@ -40,6 +50,9 @@
 	        <input type="submit" name="submit_change_name" value="Change" />
          </form>
             <a href = "/SecureWitness/deleteFolder/{{ folder_id }}">Delete Folder and Contained Reports</a>
+
+            <!--<a href = "/SecureWitness/copyFolder/{{ folder_id }}">Copy Folder and Contained Reports</a>-->
+
         {% endif %}
     </div>
     <!--</div>-->

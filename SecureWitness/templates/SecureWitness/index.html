@@ -1,0 +1,104 @@
+{% extends 'SecureWitness/base.html' %}
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>SecureWitness</title>
+	
+  </head>
+
+  <body>
+    {% block body_block %}
+    <div class="hero-unit">
+      {% if user.is_authenticated %}
+      <h2>Search</h2>
+	  <h4> Search by field for reports you have access to </h4>
+     <!-- /input-group -->
+          <form id="search_form" method="post" action="/SecureWitness/results/" enctype="multipart/form-data">
+	    {% csrf_token %}
+    	{{ search_form.as_table }}
+	    <input type="submit" class="btn" name="submitSearch" value="Go" />
+         </form>
+
+    
+
+	<section>
+      <h2>My Reports</h2>
+		
+      {% if myreports %}
+      <ul>
+		{% for report in myreports %}
+		<li><a href="/SecureWitness/report/{{report.id}}">{{ report.title }}</a></li>
+		{% endfor %}
+      </ul>
+      {% else %}
+		<p>No reports.</p>
+      {% endif %}
+	 </section><?--
+	 --><section>
+	  <h2>Other Reports</h2>
+      {% if reports %}
+      <ul>
+	{% for report in reports %}
+	<li><a href="/SecureWitness/report/{{report.id}}">{{ report.title }}</a></li>
+	{% endfor %}
+      </ul>
+      {% else %}
+      <p>No reports.</p>
+      {% endif %}
+     </section><?--
+	 --><section>
+      <h2>My Groups</h2>
+      {% if groups %}
+      <ul>
+	{% for group in groups %}
+	
+	<li><a href="/SecureWitness/group/{{ group }}">{{ group }}</a></li>
+	{% endfor %}
+      </ul>
+      {% else %}
+      <p>No groups.</p>
+      {% endif %}
+         <!-- </form>-->
+	</section><section>
+	 <h2>Request Groups</h2>
+      {% if request_groups %}
+	  <ul>
+	{% for group in request_groups %}
+	<li><a href="/SecureWitness/group/{{ group }}">{{ group }}</a></li>
+	{% endfor %}
+      </ul>
+      {% else %}
+      <p>No groups to send requests to join.</p>
+      {% endif %}
+	 </section><section>
+	   <h2>My Folders</h2>
+      {% if my_folders %}
+      <ul>
+	{% for folder in my_folders %}
+	<li><a href="/SecureWitness/folder/{{folder.name}}">{{ folder.name }}</a></li>
+	{% endfor %}
+      </ul>
+      {% else %}
+      <p>No folders.</p>
+      {% endif %}
+	</section><section>
+        <h2>Create New Folder</h2>
+		 <form id="make_folder_form" method="post" action="/SecureWitness/" enctype="multipart/form-data">
+    	{% csrf_token %}
+
+	    {{ make_folder_form.as_p }}
+
+	    <input type="submit" name="submit_make_folder" value="Make Folder" />
+         </form>
+	</section>
+     
+
+      {% else %}
+      This is the home page.
+      {% endif %}
+
+        </div>
+    {% endblock %}
+  </body>
+</html>

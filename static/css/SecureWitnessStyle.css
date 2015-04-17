@@ -1,0 +1,10 @@
+section{
+	display: inline-block;
+	vertical-align: top;
+	width: 50%;
+}
+aside{
+	float: right;
+	
+	width: 50%;
+}

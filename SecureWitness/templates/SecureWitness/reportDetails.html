@@ -1,0 +1,59 @@
+{% extends 'SecureWitness/base.html' %}
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>SecureWitness</title>
+  </head>
+
+  <body>
+    {% block body_block %}
+    {% if report %}
+	
+        <ul>
+        
+		<div class="hero-unit">
+            <center>
+				
+				<a href = "/SecureWitness"> Home </a> 
+				{% if isAuthor %}
+					&nbsp;&nbsp;&nbsp;
+					<a href = "/SecureWitness/edit/{{report.id}}">Edit Report</a>&nbsp;&nbsp;&nbsp;
+					<a href = "/SecureWitness/delete/{{report.id}}">Delete Report</a>&nbsp;&nbsp;&nbsp;
+					<a href = "/SecureWitness/copyReport/{{report.id}}">Copy Report</a>
+				{% endif %}
+				<h1>{{report.title}}</h1>
+			</center>
+		</div>
+			Author: {{report.authorName}} </br>
+        	Upload Date: {{report.timestamp}} </br>
+			Subject: {{report.shortDesc}} </br>
+			Description: {{report.detailsDesc}} </br>
+			{% if report.dateOfIncident %}
+			    Incident Date: {{report.dateOfIncident}}</br>
+			{% endif %}
+			{% if report.locationOfIncident %}
+			    Location: {{report.locationOfIncident}}</br>
+			{% endif %}
+			{% if report.keywords %}
+				Keywords: {{report.keywords}}</br>
+			{% endif %}
+			
+        
+    	
+        {% if files %}
+				Files: 
+				{% for file in files %}
+				    <a href="/SecureWitness/download/{{file.id}}"> {{file.file}}</a></br>
+				{% endfor %}
+		{% endif %}
+		</ul>
+    {% else %}
+      <p>No report.</p>
+      
+	{% endif %}
+    {% endblock %}
+	
+	
+  </body>
+</html>

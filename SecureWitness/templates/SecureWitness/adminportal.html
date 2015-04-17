@@ -1,0 +1,66 @@
+{% extends 'SecureWitness/base.html' %}
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>SecureWitness Admin Portal</title>
+  </head>
+
+  <body>
+    {% block body_block %}
+    <div class="hero-unit">
+      
+      <h2>All Reports</h2>
+      {% if all_reports %}
+      <ul>
+	{% for report in all_reports %}
+	<li><a href="/SecureWitness/report/{{report.id}}">{{ report.title }}</a></li>
+	{% endfor %}
+      </ul>
+      {% else %}
+      <p>No reports.</p>
+      {% endif %}
+      
+      <h2>All Groups</h2>
+      {% if all_groups %}
+      <ul>
+	{% for group in all_groups %}
+	<li><a href="/SecureWitness/group/{{ group.name }}">{{ group.name }}</a></li>
+	{% endfor %}
+      </ul>
+      {% else %}
+      <p>No Groups.</p>
+      {% endif %}
+      
+      <h2>Promote To Admin</h2>
+	  <form id="admin_user_form" method="post" action="/SecureWitness/adminportal/" enctype="multipart/form-data">
+	    {% csrf_token %}
+	    {{ admin_user_form.as_p }}
+	    <input type="submit" name="submitAdmin" value="Promote" />
+	  </form>
+       
+      <h2>Suspend User</h2>
+	  <form id="suspend_user_form" method="post" action="/SecureWitness/adminportal/" enctype="multipart/form-data">
+	    {% csrf_token %}
+	    {{ suspend_user_form.as_p }}
+	    <input type="submit" name="submitSuspend" value="Suspend" />
+	  </form>
+          
+      <h2>Restore User</h2>
+	  <form id="restore_user_form" method="post" action="/SecureWitness/adminportal/" enctype="multipart/form-data">
+	    {% csrf_token %}
+	    {{ restore_user_form.as_p }}
+	    <input type="submit" name="submitRestore" value="Restore" />
+	  </form>
+    
+      <h2>Create Group</h2>
+	  <form id="create_group_form" method="post" action="/SecureWitness/adminportal/" enctype="multipart/form-data">
+	    {% csrf_token %}
+	    {{ create_group_form.as_p }}
+	    <input type="submit" name="submitGroup" value="Create" />
+	  </form>
+
+    </div>
+    {% endblock %}
+  </body>
+</html>

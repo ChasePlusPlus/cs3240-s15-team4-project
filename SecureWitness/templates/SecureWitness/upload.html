@@ -1,0 +1,15 @@
+<form action="{% url 'SecureWitness:upload' %}" method="post" enctype="multipart/form-data">
+{% csrf_token %}
+Report Title: {{form.title}} </br>
+Report Subject : {{form.shortDesc}} </br>
+Description: </br>{{form.detailsDesc}} </br>
+Date of Incident (optional): {{form.dateOfIncident}} </br>
+Incident Location (optional): {{form.locationOfIncident}} </br>
+Keywords (optional): {{form.keywords}} </br>
+<!--Report Author: {{form.author}} </br>-->
+Would you like to make this report private? {{form.user_perm}}</br>
+
+<input type = "submit" value = "Upload File(s)" name = "upload"/>
+<input type = "submit" value = "Submit Report" name = "submit"/>
+
+</form>

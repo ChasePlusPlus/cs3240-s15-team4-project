@@ -9,7 +9,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
 from SecureWitness.models import File, Group, Report, UserProfile, Request, Folder
-from SecureWitness.forms import RestoreUserForm, SuspendUserForm, AddMemberForm, RemoveMemberForm, FileUploadForm, SearchForm, UserForm, UserProfileForm, ReportUploadForm, AdminUserForm, RequestAccessForm, GrantAccessForm, CreateGroupForm, EditReportForm, AddToFolderForm, ChangeFolderNameForm, MakeFolderForm
+from SecureWitness.forms import RestoreUserForm, SuspendUserForm, AddMemberForm, RemoveMemberForm, FileUploadForm, SearchForm, UserForm, UserProfileForm, ReportUploadForm, AdminUserForm, RequestAccessForm, GrantAccessForm, CreateGroupForm, EditReportForm, AddToFolderForm, ChangeFolderNameForm, MakeFolderForm, RemoveFromFolderForm
 import datetime
 import mimetypes
 
@@ -164,7 +164,6 @@ def index(request):
         for group in notMyGroups:
             if group not in mygroups:
                 request_groups.append(group)
-#<<<<<<< HEAD
 
         if is_admin:
             if request.method == 'POST':
@@ -495,6 +494,8 @@ def folder(request, curr_folder):
     context_dict['folder_id'] = add_folder.id
     reports = Report.objects.all().filter(folder=add_folder.id)
     context_dict['folder_reports'] = reports
+    folderID = add_folder.id
+
     if request.method == 'POST':
         if 'submit_add_to_folder' in request.POST:
             add_form = AddToFolderForm(username, data=request.POST)
@@ -510,10 +511,30 @@ def folder(request, curr_folder):
                 context_dict['folder_reports'] = reports
 
                 change_form = ChangeFolderNameForm()
-                #return HttpResponseRedirect(reverse('SecureWitness:folder', args=curr_folder+"/"))
-                #todo implement a way to refresh options after adding a file to the folder
+                remove_form = RemoveFromFolderForm(username, folderID)
+
+                return HttpResponseRedirect(reverse('SecureWitness:folder', args={curr_folder}))
+
             else:
                 print(add_form.errors)
+        elif 'submit_remove_from_folder' in request.POST:
+            remove_form = RemoveFromFolderForm(username, folderID, data=request.POST)
+            if remove_form.is_valid():
+                selection = remove_form.cleaned_data['reports']  #gets selected option
+                add_folder = Folder.objects.get(name=curr_folder)
+                report = Report.objects.get(id=selection)
+                report.folder = 0
+                report.save(force_update=True)
+                reports = Report.objects.all().filter(folder=report.folder)
+                context_dict['report'] = report
+                context_dict['folder_reports'] = reports
+
+                add_form = AddToFolderForm(username)
+                change_form = ChangeFolderNameForm()
+                return HttpResponseRedirect(reverse('SecureWitness:folder', args={curr_folder}))
+
+            else:
+                print(remove_form.errors)
         elif 'submit_change_name' in request.POST:
             change_form = ChangeFolderNameForm(data=request.POST)
             if change_form.is_valid():
@@ -522,20 +543,25 @@ def folder(request, curr_folder):
                 add_folder.name = new_name
                 add_folder.save()
 
+                remove_form = RemoveFromFolderForm(username, folderID)
                 add_form = AddToFolderForm(username)
                 return HttpResponseRedirect(reverse('SecureWitness:index'))
 
             else:
                 print(change_form.errors)
+
         else:
             add_form = AddToFolderForm(username)
             change_form = ChangeFolderNameForm()
+            remove_form = RemoveFromFolderForm(username, folderID)
     else:
         add_form = AddToFolderForm(username)
         change_form = ChangeFolderNameForm()
+        remove_form = RemoveFromFolderForm(username, folderID)
 
     context_dict['add_to_folder_form'] = add_form
     context_dict['change_folder_name_form'] = change_form
+    context_dict['remove_from_folder_form'] = remove_form
     return render_to_response('SecureWitness/folder.html', context_dict, context)
 
 
@@ -762,6 +788,22 @@ def deleteReport(request, reportID):
     context = RequestContext(request)
     #reportTitle2 = reportTitle.replace("_", " ")
     reportSelected = Report.objects.get(id = reportID).delete()
+	
+    return HttpResponseRedirect(reverse('SecureWitness:index'))
+
+def copyReport(request, reportID):
+    #return HttpResponse(request.user.profile)
+    context = RequestContext(request)
+    #reportTitle2 = reportTitle.replace("_", " ")
+    reportSelected = Report.objects.get(id = reportID)
+    copyOfReport = Report(authorId = reportSelected.authorId, authorName = reportSelected.authorName, title = reportSelected.title + "(copy)", shortDesc = reportSelected.shortDesc, detailsDesc = reportSelected.detailsDesc, dateOfIncident = reportSelected.dateOfIncident, locationOfIncident = reportSelected.locationOfIncident, keywords = reportSelected.keywords, access_type = reportSelected.access_type, timestamp = str(datetime.datetime.now()))
+    copyOfReport.save()
+    reportUploaded = Report.objects.get(id = copyOfReport.id)
+    filesOfReport = File.objects.filter(report_id = reportID)
+    
+    for files in filesOfReport:
+        newFile = File(file = files.file, report = reportUploaded, fileType = files.fileType)
+        newFile.save()
 	
     return HttpResponseRedirect(reverse('SecureWitness:index'))
 

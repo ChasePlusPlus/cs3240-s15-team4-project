@@ -19,7 +19,8 @@
 				{% if isAuthor %}
 					&nbsp;&nbsp;&nbsp;
 					<a href = "/SecureWitness/edit/{{report.id}}">Edit Report</a>&nbsp;&nbsp;&nbsp;
-					<a href = "/SecureWitness/delete/{{report.id}}">Delete Report</a>
+					<a href = "/SecureWitness/delete/{{report.id}}">Delete Report</a>&nbsp;&nbsp;&nbsp;
+					<a href = "/SecureWitness/copyReport/{{report.id}}">Copy Report</a>
 				{% endif %}
 				<h1>{{report.title}}</h1>
 			</center>

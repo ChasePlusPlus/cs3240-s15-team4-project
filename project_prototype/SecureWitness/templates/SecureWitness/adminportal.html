@@ -39,6 +39,19 @@
 	    <input type="submit" name="submitAdmin" value="Promote" />
 	  </form>
        
+      <h2>Suspend User</h2>
+	  <form id="suspend_user_form" method="post" action="/SecureWitness/adminportal/" enctype="multipart/form-data">
+	    {% csrf_token %}
+	    {{ suspend_user_form.as_p }}
+	    <input type="submit" name="submitSuspend" value="Suspend" />
+	  </form>
+          
+      <h2>Restore User</h2>
+	  <form id="restore_user_form" method="post" action="/SecureWitness/adminportal/" enctype="multipart/form-data">
+	    {% csrf_token %}
+	    {{ restore_user_form.as_p }}
+	    <input type="submit" name="submitRestore" value="Restore" />
+	  </form>
     
       <h2>Create Group</h2>
 	  <form id="create_group_form" method="post" action="/SecureWitness/adminportal/" enctype="multipart/form-data">

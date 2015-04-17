@@ -113,3 +113,9 @@ class SearchForm(forms.Form):
     search_field = forms.ChoiceField(choices=CHOICES)
     text = forms.CharField()
 
+class SuspendUserForm(forms.Form):
+    
+    user = forms.ModelChoiceField(queryset=User.objects.filter(is_active=True), required=False)
+
+class RestoreUserForm(forms.Form):
+    user = forms.ModelChoiceField(queryset=User.objects.filter(is_active=False), required=False)

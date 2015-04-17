@@ -9,7 +9,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
 from SecureWitness.models import File, Group, Report, UserProfile, Request, Folder
-from SecureWitness.forms import AddMemberForm, RemoveMemberForm, FileUploadForm, SearchForm, UserForm, UserProfileForm, ReportUploadForm, AdminUserForm, RequestAccessForm, GrantAccessForm, CreateGroupForm, EditReportForm, AddToFolderForm, ChangeFolderNameForm, MakeFolderForm
+from SecureWitness.forms import RestoreUserForm, SuspendUserForm, AddMemberForm, RemoveMemberForm, FileUploadForm, SearchForm, UserForm, UserProfileForm, ReportUploadForm, AdminUserForm, RequestAccessForm, GrantAccessForm, CreateGroupForm, EditReportForm, AddToFolderForm, ChangeFolderNameForm, MakeFolderForm
 import datetime
 import mimetypes
 
@@ -67,6 +67,8 @@ def adminportal(request):
                 user.save()
                 admin_user_form = AdminUserForm()
                 create_group_form = CreateGroupForm()
+                suspend_user_form = SuspendUserForm()
+                restore_user_form = RestoreUserForm()
             else: #form is not valid
                 print (admin_user_form.errors)
         if 'submitGroup' in request.POST:
@@ -76,15 +78,45 @@ def adminportal(request):
                 group.save()
                 create_group_form = CreateGroupForm()
                 admin_user_form = AdminUserForm()
+                suspend_user_form = SuspendUserForm()
+                restore_user_form = RestoreUserForm()
             else:
                 print(create_group_form.errors)
+        if 'submitSuspend' in request.POST:
+            suspend_user_form = SuspendUserForm(data=request.POST)
+            if suspend_user_form.is_valid:
+                userID = request.POST['user']
+                user = User.objects.get(id=userID)
+                user.is_active = False
+                user.save()
+                create_group_form = CreateGroupForm()
+                admin_user_form = AdminUserForm()
+                suspend_user_form = SuspendUserForm()
+                restore_user_form = RestoreUserForm()
+            else:
+                print(suspend_user_form.errors)
+        if 'submitRestore' in request.POST:
+            restore_user_form = RestoreUserForm(data=request.POST)
+            if restore_user_form.is_valid:
+                userID = request.POST['user']
+                user = User.objects.get(id=userID)
+                user.is_active = True
+                user.save()
+                create_group_form = CreateGroupForm()
+                admin_user_form = AdminUserForm()
+                suspend_user_form = SuspendUserForm()
+                restore_user_form = RestoreUserForm()
+            else:
+                print(restore_user_form.errors)
     else: #request method is not POST
         admin_user_form = AdminUserForm()
         create_group_form = CreateGroupForm()
+        suspend_user_form = SuspendUserForm()
+        restore_user_form = RestoreUserForm()
     all_reports = Report.objects.all()
     all_groups = Group.objects.all()
 
-    context_dict = {'all_groups': all_groups, 'all_reports': all_reports, 'reports': reports, 'myreports' : myreports,'groups': mygroups, 'admin_user_form': admin_user_form, 'admin_status': is_admin, 'create_group_form': create_group_form}
+    context_dict = {'restore_user_form': restore_user_form, 'suspend_user_form': suspend_user_form, 'all_groups': all_groups, 'all_reports': all_reports, 'reports': reports, 'myreports' : myreports,'groups': mygroups, 'admin_user_form': admin_user_form, 'admin_status': is_admin, 'create_group_form': create_group_form}
 
     return render_to_response('SecureWitness/adminportal.html', context_dict, context)
 

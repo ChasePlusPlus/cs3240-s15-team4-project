@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/1.7/ref/settings/
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
 import dj_database_url
-DATABASES['default'] =  dj_database_url.config(default='link/to/database/')
+
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 SETTINGS_DIR = os.path.dirname(__file__)
@@ -70,7 +70,7 @@ DATABASES = {
         'NAME': 'SW_db',
     }
 }
-
+DATABASES['default'] =  dj_database_url.config(default='link/to/database/')
 # Internationalization
 # https://docs.djangoproject.com/en/1.7/topics/i18n/
 

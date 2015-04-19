@@ -68,9 +68,13 @@ DATABASES = {
         'ENGINE': 'django.db.backends.sqlite3',
         #'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
         'NAME': 'SW_db',
+		 #'USER': '', 
+         #'PASSWORD': '',
+         #'HOST': 'localhost', # '127.0.0.1' probably works also
+         #'PORT': '5432',
     }
 }
-DATABASES['default'] =  dj_database_url.config(default='link/to/database/')
+DATABASES['default'] =  dj_database_url.config(default="postgres://daebabdykgebhb:BdkgL7uYdrMBNx0X5-nNYlbiJr@ec2-54-204-45-126.compute-1.amazonaws.com:5432/d5t6jijl4vcq81")
 # Internationalization
 # https://docs.djangoproject.com/en/1.7/topics/i18n/
 

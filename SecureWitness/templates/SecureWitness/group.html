@@ -68,23 +68,34 @@
 	</form>
         </div>
         {% endif %}
-	{% if comments %}
-		{% for comment in comments %}
-			<h5> From {{comment.authorName}}: </h5>
-			{{comment.comment}}
-			</br>
-			</br>
-		{% endfor %}
-	{% else %}
-		No comments.
-	{% endif %}
-	<form id = "comment_form" method = "post" action = "/SecureWitness/groupComment/{{ group.name }}/" enctype="multipart/form-data">
-		{% csrf_token %}
-		{{comment_form.comment}} </br>
-		{% if comment_form %}
-			<input type="submit" name = "submitComment" value = "Send Comment">
+	
+	{% if loggedin == 1 %}
+		<h2> Comments </h2>
+		<h4> See what group members have to say or add your own comment below: </h4>
+		{% if comments %}
+			
+			{% for comment, username in comments %}
+				{% if userID == comment.authorId_id %}
+					
+					<h5> From <a href = "/SecureWitness/userportal/{{username}}">me:</a> </h5>
+				{% else %}
+					<h5> From <a href = "/SecureWitness/userportal/{{username}}">{{comment.authorName}}:</a></h5>
+				{% endif %}
+				{{comment.comment}}
+				</br>
+				</br>
+			{% endfor %}
+		{% else %}
+			No comments.
 		{% endif %}
-	</form>
+		<form id = "comment_form" method = "post" action = "/SecureWitness/groupComment/{{ group.name }}/" enctype="multipart/form-data">
+			{% csrf_token %}
+			{{comment_form.comment}} </br>
+			{% if comment_form %}
+				<input type="submit" name = "submitComment" value = "Send Comment">
+			{% endif %}
+		</form>
+	{% endif %}
         
 
     </div>

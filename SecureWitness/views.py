@@ -582,9 +582,22 @@ def group(request, usergroup):
     g = Group.objects.get(name=usergroup)
     context_dict['group'] = g
     comments = Comments.objects.filter(groupId_id = usergroup)
-    context_dict['comments'] = comments
+    userprof = UserProfile.objects.get(user_id=request.user.id)
+    context_dict['userID'] = userprof.id
+    authIdList = []
+	#collect all of the usernames associated with the author of each comment
+    for comment in comments:
+        auth = UserProfile.objects.get(id = comment.authorId_id)
+        user = User.objects.get(id = auth.user_id)
+        username = user.username
+        authIdList.append(username) 
+    
+	#zip the arrays together so that it is like a dictionary
+    context_dict['comments'] = zip(comments, authIdList)
     commentForm = CommentForm()
     context_dict['comment_form'] = commentForm 
+    
+    #context_dict['currUser'] = request.user
     if is_admin:
         if request.method == 'POST':
             if 'submitAdd' in request.POST:

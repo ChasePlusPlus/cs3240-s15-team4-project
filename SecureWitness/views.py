@@ -12,6 +12,7 @@ from SecureWitness.models import File, Group, Report, UserProfile, Request, Fold
 from SecureWitness.forms import RestoreUserForm, SuspendUserForm, AddMemberForm, RemoveMemberForm, FileUploadForm, SearchForm, UserForm, UserProfileForm, ReportUploadForm, AdminUserForm, RequestAccessForm, GrantAccessForm, CreateGroupForm, EditReportForm, AddToFolderForm, ChangeFolderNameForm, MakeFolderForm, RemoveFromFolderForm
 import datetime
 import mimetypes
+from django.core.servers.basehttp import FileWrapper
 
 
 #class RequestForm(forms.Form):
@@ -723,6 +724,7 @@ def FileUpload(request, reportID):
             #reportTitle2 = reportTitle.replace("_", " ")
             reportSelected = Report.objects.get(id = reportID)
             fileUploaded = request.FILES['file']
+            filename = fileUploaded.name
 			
 			#guess MimeType and add to model
             mimetypes.init()
@@ -731,6 +733,8 @@ def FileUpload(request, reportID):
 			
             newFile = File(file = fileUploaded, report = reportSelected, fileType = fileTypeString)
             newFile.save()
+            #newFile.file.name = filename
+            #newFile.save()
         #if 'done then return to index page
             if 'done' in request.POST:
                 #return HttpResponse("DONE")
@@ -834,8 +838,14 @@ def download(request, fileID):
     #get filename
     file = File.objects.get(id = fileID)
     filename = file.file.name
+    #return HttpResponse(filename)
     type = file.fileType
-    response = HttpResponse(request, content_type= type)
+    #path = "" # Get file path
+    #f = file.file.open('rb')
+    #wrapper = FileWrapper(f)
+    file.file.seek(0)
+    wrapper = FileWrapper(file.file)
+    response = HttpResponse(wrapper, content_type= type)
 	
 	#concatenate filename with this
     response['Content-Disposition'] = 'attachment; filename=' + filename;

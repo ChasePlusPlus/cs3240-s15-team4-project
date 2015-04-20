@@ -9,7 +9,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
 from SecureWitness.models import File, Group, Report, UserProfile, Request, Folder, Comments
-from SecureWitness.forms import RestoreUserForm, SuspendUserForm, AddMemberForm, RemoveMemberForm, FileUploadForm, SearchForm, UserForm, UserProfileForm, ReportUploadForm, AdminUserForm, RequestAccessForm, GrantAccessForm, CreateGroupForm, EditReportForm, AddToFolderForm, ChangeFolderNameForm, MakeFolderForm, RemoveFromFolderForm, CommentForm
+from SecureWitness.forms import RestoreUserForm, SuspendUserForm, AddMemberForm, RemoveMemberForm, FileUploadForm, SearchForm, UserForm, UserProfileForm, ReportUploadForm, AdminUserForm, RequestAccessForm, GrantAccessForm, CreateGroupForm, EditReportForm, AddToFolderForm, ChangeFolderNameForm, MakeFolderForm, RemoveFromFolderForm, CommentForm, AddReportToGroupForm
 import datetime
 import mimetypes
 from django.core.servers.basehttp import FileWrapper
@@ -126,6 +126,7 @@ def index(request):
 #need something if not logged in redirect to login page
     #if admin select all of each
     context = RequestContext(request)
+    username = request.user.first_name + " " + request.user.last_name
     HttpResponse(request.user.id)
     if request.user.is_authenticated():
 
@@ -220,7 +221,29 @@ def index(request):
         #my_folders = Folder.objects.all(owner=request.user)
         context_dict['my_folders'] = my_folders
 
-        #search
+
+        #add report to group function stuff here
+        if request.method == 'POST':
+            if 'submit_add_report_to_group' in request.POST:
+                add_report_form = AddReportToGroupForm(username, userid, data=request.POST)
+                if add_report_form.is_valid:
+                    groupname = request.POST.get('groups', False)
+                    reportid = request.POST.get('reports', False)
+                    group = Group.objects.get(name=groupname)
+                    report = Report.objects.get(id=reportid)
+
+                    if report not in report.group_perm.all():
+                        report.group_perm.add(group)
+                        report.save()
+
+                else: #form is not valid
+                    print (add_report_form.errors)
+            else: #request method is not POST
+                add_report_form = AddReportToGroupForm(username, userid)
+        else: #request method is not POST
+            add_report_form = AddReportToGroupForm(username, userid)
+
+        context_dict['add_report_to_group_form'] = add_report_form
 
     else:
         context_dict = {}
@@ -570,7 +593,6 @@ def folder(request, curr_folder):
 def group(request, usergroup):
 
     authorId = request.user #gets logged in user
-
     context = RequestContext(request)
     
     userID = request.user.id
@@ -635,6 +657,15 @@ def group(request, usergroup):
     else:
         context_dict['loggedin'] = 0 #if logged in user is not in the group
 
+    #go through all Reports and find reports belonging to usergroup
+    reports = Report.group_perm.through.objects.filter(group=usergroup).values_list('report', flat=True)
+    actual_reports = []
+    for r in reports:
+        rep = Report.objects.get(id=r)
+        actual_reports.append(rep)
+
+    context_dict['reports'] = actual_reports
+
     context_dict['members'] = members
 
     request_list = Request.objects.all()
@@ -677,6 +708,7 @@ def group(request, usergroup):
         #return render(request, 'SecureWitness/group/'+usergroup, context_dict)
         return HttpResponseRedirect(reverse('SecureWitness:group'))
 
+
     
     #request_list = Request.objects.all()
     #requests = [val for val in request_list.all() if val.group == g]
@@ -691,6 +723,7 @@ def group(request, usergroup):
     
     
     
+
     context_dict['add_member_form'] = add_member_form
     context_dict['remove_member_form'] = remove_member_form
     

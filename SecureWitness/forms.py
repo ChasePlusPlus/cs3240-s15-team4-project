@@ -127,3 +127,6 @@ class SuspendUserForm(forms.Form):
 
 class RestoreUserForm(forms.Form):
     user = forms.ModelChoiceField(queryset=User.objects.filter(is_active=False), required=False)
+
+class CommentForm(forms.Form):
+    comment = forms.CharField(widget = forms.Textarea)

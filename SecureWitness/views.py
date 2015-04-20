@@ -8,8 +8,8 @@ from django.template import RequestContext, loader
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
-from SecureWitness.models import File, Group, Report, UserProfile, Request, Folder
-from SecureWitness.forms import RestoreUserForm, SuspendUserForm, AddMemberForm, RemoveMemberForm, FileUploadForm, SearchForm, UserForm, UserProfileForm, ReportUploadForm, AdminUserForm, RequestAccessForm, GrantAccessForm, CreateGroupForm, EditReportForm, AddToFolderForm, ChangeFolderNameForm, MakeFolderForm, RemoveFromFolderForm
+from SecureWitness.models import File, Group, Report, UserProfile, Request, Folder, Comments
+from SecureWitness.forms import RestoreUserForm, SuspendUserForm, AddMemberForm, RemoveMemberForm, FileUploadForm, SearchForm, UserForm, UserProfileForm, ReportUploadForm, AdminUserForm, RequestAccessForm, GrantAccessForm, CreateGroupForm, EditReportForm, AddToFolderForm, ChangeFolderNameForm, MakeFolderForm, RemoveFromFolderForm, CommentForm
 import datetime
 import mimetypes
 from django.core.servers.basehttp import FileWrapper
@@ -581,7 +581,10 @@ def group(request, usergroup):
     context_dict = {'group_list': group_list, 'admin_status': is_admin}
     g = Group.objects.get(name=usergroup)
     context_dict['group'] = g
-
+    comments = Comments.objects.filter(groupId_id = usergroup)
+    context_dict['comments'] = comments
+    commentForm = CommentForm()
+    context_dict['comment_form'] = commentForm 
     if is_admin:
         if request.method == 'POST':
             if 'submitAdd' in request.POST:
@@ -607,6 +610,7 @@ def group(request, usergroup):
             pass
 
         add_member_form = AddMemberForm(g)
+        #commentsForm = CommentsForm()
         remove_member_form = RemoveMemberForm(g)
         context_dict['add_member_form'] = add_member_form
         context_dict['remove_member_form'] = remove_member_form
@@ -660,6 +664,7 @@ def group(request, usergroup):
         #return render(request, 'SecureWitness/group/'+usergroup, context_dict)
         return HttpResponseRedirect(reverse('SecureWitness:group'))
 
+    
     #request_list = Request.objects.all()
     #requests = [val for val in request_list.all() if val.group == g]
     #context_dict['requests'] = requests
@@ -672,8 +677,10 @@ def group(request, usergroup):
     #prints out all requests that have been made to the group  #TODO: change Request model charfield to foreignkey with user, make form in html group to ask for access
     
     
+    
     context_dict['add_member_form'] = add_member_form
     context_dict['remove_member_form'] = remove_member_form
+    
     return HttpResponse(remove_member_form)
 
     return render_to_response('SecureWitness/group.html', context_dict, context)
@@ -851,3 +858,14 @@ def download(request, fileID):
     response['Content-Disposition'] = 'attachment; filename=' + filename;
 
     return response
+
+def groupComment(request, usergroup):
+    if request.method == 'POST':
+        #return HttpResponse(request.user.id)
+        #userProfile = request.user.profile
+        userprof = UserProfile.objects.get(user_id=request.user.id)
+        newComment = Comments(comment = request.POST['comment'], groupId_id = usergroup, authorId_id = userprof.id, authorName = request.user.get_full_name() )
+        newComment.save()
+    #return HttpResponse(usergroup)
+	#return HttpResponseRedirect(reverse('SecureWitness:group'))
+    return HttpResponseRedirect(reverse('SecureWitness:group', args = (usergroup,)))

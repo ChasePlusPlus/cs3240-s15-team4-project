@@ -70,3 +70,9 @@ class File(models.Model):
 class Key(models.Model):
     file = models.OneToOneField(File, primary_key=True)
     key = models.TextField()
+
+class Comments(models.Model):
+    groupId = models.ForeignKey(Group)
+    comment = models.TextField(default='', blank=True)
+    authorId = models.ForeignKey(UserProfile, blank=True)
+    authorName = models.CharField(max_length = 30, default = '', blank = True)

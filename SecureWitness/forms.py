@@ -49,6 +49,18 @@ class ChangeFolderNameForm(forms.Form):
         fields = ('name',)
 
 
+class AddReportToGroupForm(forms.Form):
+
+    def __init__(self, user, userid, *args, **kwargs):
+        super(AddReportToGroupForm, self).__init__(*args, **kwargs)
+        self.fields['reports'] = forms.ChoiceField(
+            choices=[(o.id, str(o)) for o in Report.objects.filter(authorName=user)])
+        my_groups = Group.members.through.objects.filter(user_id=userid).values_list('group_id', flat=True)
+        self.fields['groups'] = forms.ChoiceField(
+            choices=[(g, str(g)) for g in my_groups])
+
+
+
 class ReportUploadForm(forms.Form):
     title = forms.CharField()
 	#author = forms.CharField()

@@ -25,6 +25,7 @@ class Group(models.Model):
     #group = models.OneToOneField(Group)
     name = models.CharField(max_length=200, primary_key=True)
     members = models.ManyToManyField(User)
+    #reports = models.ManyToManyField(Report)
 
     def __str__(self):
         return self.name
@@ -61,6 +62,7 @@ class Report(models.Model):
 
     def __str__(self):
         return self.title
+
 
 class File(models.Model):
     file = models.FileField(upload_to='SecureWitness/', blank=True, default = "", null = True)

@@ -1,10 +1,22 @@
+{% extends 'SecureWitness/base.html' %}
+{% block body_block %}
+<div class="hero-unit">
+<h2> Delete Associated File </h2>
+<h4> Please select the file you would like to delete. When you are finished 'Done' will return to home. </h4>
 <form action="{% url 'SecureWitness:DeleteFile' reportID %}" enctype="multipart/form-data" method = "post">
 		{% csrf_token %}
-		
-	{% for file in files %}
-		<input type="radio" name="file" id="file{{ forloop.counter }}" value="{{ file.id }}" />
-		<label for="file{{ forloop.counter }}">{{ file.file }}</label><br />
-	{% endfor %}
+	{% if files %}
+		{% for file in files %}
+			<label for="file{{ forloop.counter }}"><input type="radio" name="file" id="file{{ forloop.counter }}" value="{{ file.id }}" />{{ file.file }}</label><br />
+		{% endfor %}
+		<input type="submit" name="submit" value="Delete" />
+		<input type = "submit" name = "done" value = "Done" />
+	{% else %}
+		No files to be deleted. </br>
+		<input type = "submit" name = "done" value = "Done" />
+	{% endif %}
 
-	<input type="submit" name="submit" value="Delete" />
+	
 </form>
+</div>
+{% endblock %}

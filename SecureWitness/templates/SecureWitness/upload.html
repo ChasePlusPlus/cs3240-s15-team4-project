@@ -1,3 +1,8 @@
+{% extends 'SecureWitness/base.html' %}
+{% block body_block %}
+<div class="hero-unit">
+<h2> Report Upload </h2>
+<h4> Please enter the relevant information about your report. </h4>
 <form action="{% url 'SecureWitness:upload' %}" method="post" enctype="multipart/form-data">
 {% csrf_token %}
 Report Title: {{form.title}} </br>
@@ -13,3 +18,5 @@ Would you like to make this report private? {{form.user_perm}}</br>
 <input type = "submit" value = "Submit Report" name = "submit"/>
 
 </form>
+</div>
+{% endblock %}

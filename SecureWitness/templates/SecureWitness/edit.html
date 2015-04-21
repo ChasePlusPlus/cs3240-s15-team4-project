@@ -1,3 +1,8 @@
+{% extends 'SecureWitness/base.html' %}
+{% block body_block %}
+<div class="hero-unit">
+<h2> Edit Report</h2>
+<h4> Please change whatever information you would like. </h4>
 <form action="{% url 'SecureWitness:edit' reportID %}" method="post" enctype="multipart/form-data">
 {% csrf_token %}
 Report Title: {{form.title}} </br>
@@ -25,3 +30,5 @@ File List:
 <input type = "submit" value = "Submit Edits to Report" name = "submit"/>
 
 </form>
+</div>
+{% endblock %}

@@ -1,4 +1,8 @@
-
+{% extends 'SecureWitness/base.html' %}
+{% block body_block %}
+<div class="hero-unit">
+<h2> Upload File </h2>
+<h4> Select a file to upload. If you would like to add another file after the chosen one, select "Add a File", otherwise select "Done"</h4>
 <form action="{% url 'SecureWitness:FileUpload' reportID %}" method="post" enctype="multipart/form-data">
 {% csrf_token %}
 
@@ -7,3 +11,5 @@
 <input type = "submit" value = "Done" name = "done"/>
 
 </form>
+</div>
+{% endblock %}

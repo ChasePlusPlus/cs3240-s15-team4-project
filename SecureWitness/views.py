@@ -126,7 +126,7 @@ def index(request):
 #need something if not logged in redirect to login page
     #if admin select all of each
     context = RequestContext(request)
-    username = request.user.first_name + " " + request.user.last_name
+    #username = request.user.first_name + " " + request.user.last_name
     HttpResponse(request.user.id)
     if request.user.is_authenticated():
 
@@ -225,7 +225,7 @@ def index(request):
         #add report to group function stuff here
         if request.method == 'POST':
             if 'submit_add_report_to_group' in request.POST:
-                add_report_form = AddReportToGroupForm(username, userid, data=request.POST)
+                add_report_form = AddReportToGroupForm(request.user.get_full_name(), userid, data=request.POST)
                 if add_report_form.is_valid:
                     groupname = request.POST.get('groups', False)
                     reportid = request.POST.get('reports', False)
@@ -239,9 +239,9 @@ def index(request):
                 else: #form is not valid
                     print (add_report_form.errors)
             else: #request method is not POST
-                add_report_form = AddReportToGroupForm(username, userid)
+                add_report_form = AddReportToGroupForm(request.user.get_full_name(), userid)
         else: #request method is not POST
-            add_report_form = AddReportToGroupForm(username, userid)
+            add_report_form = AddReportToGroupForm(request.user.get_full_name(), userid)
 
         context_dict['add_report_to_group_form'] = add_report_form
 
@@ -877,10 +877,14 @@ def deleteFolder(request, folderID):
 def deleteFile(request, reportID):
     #files = File.objects.filter(report_id = reportID)
     if request.method == 'POST':
-        #form = deleteFilesForm(request.POST, request.FILES)
-        fileID = request.POST['file']
-        deletedFile = File.objects.get(id = fileID).delete()
-        return HttpResponseRedirect(reverse('SecureWitness:index'))
+        if 'submit' in request.POST:
+            #form = deleteFilesForm(request.POST, request.FILES)
+            fileID = request.POST['file']
+            deletedFile = File.objects.get(id = fileID).delete()
+            #return HttpResponseRedirect(reverse('SecureWitness:index'))
+            return HttpResponseRedirect(reverse('SecureWitness:DeleteFile', args=(reportID,)))
+        if 'done' in request.POST:
+            return HttpResponseRedirect(reverse('SecureWitness:index'))
     else:
         files = File.objects.filter(report_id = reportID)
 		#form = deleteFilesForm(reportID)

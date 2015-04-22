@@ -3,6 +3,8 @@ from SecureWitness.models import UserProfile, Request, Group, Report, Folder
 from django.contrib.auth.models import User
 from django.forms import widgets
 
+class LeaveGroupForm(forms.Form):
+    pass
 
 class RequestAccessForm(forms.Form):
     #request_access = forms.BooleanField(required=True)
@@ -129,9 +131,13 @@ class CreateGroupForm(forms.ModelForm):
 class SearchForm(forms.Form):
 
     CHOICES = (('authorName', 'Author'), ('title', 'Title'), ('shortDesc', 'Subject'), ('detailsDesc', 'Description'), ('locationOfIncident', 'Location of Incident'), ('keywords', 'Keywords'))
+    ANDOR = (('and', 'AND'), ('or', 'OR'))
     
     search_field = forms.ChoiceField(choices=CHOICES)
     text = forms.CharField()
+    and_or = forms.ChoiceField(choices=ANDOR, initial='or')
+    search_field_2 = forms.ChoiceField(choices=CHOICES)
+    text_2 = forms.CharField()
 
 class SuspendUserForm(forms.Form):
     

@@ -32,6 +32,12 @@
                 {% for request in requests %}
                 <li><a href="/SecureWitness/userportal/{{ request.requester }}">{{ request.requester }}</a></li>
                 {% endfor %}
+                
+                <form id="leave_group_form" method="post" action="/SecureWitness/group/{{ group.name }}/" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {{ leave_group_form.as_p }}
+                    <input type="submit" name="submitLeave" value="Leave Group" />
+                </form>
 
             {% else %}
                 {% if request_already_made %}

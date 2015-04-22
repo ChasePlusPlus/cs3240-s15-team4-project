@@ -9,10 +9,12 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
 from SecureWitness.models import File, Group, Report, UserProfile, Request, Folder, Comments
-from SecureWitness.forms import RestoreUserForm, SuspendUserForm, AddMemberForm, RemoveMemberForm, FileUploadForm, SearchForm, UserForm, UserProfileForm, ReportUploadForm, AdminUserForm, RequestAccessForm, GrantAccessForm, CreateGroupForm, EditReportForm, AddToFolderForm, ChangeFolderNameForm, MakeFolderForm, RemoveFromFolderForm, CommentForm, AddReportToGroupForm
+from SecureWitness.forms import LeaveGroupForm, RestoreUserForm, SuspendUserForm, AddMemberForm, RemoveMemberForm, FileUploadForm, SearchForm, UserForm, UserProfileForm, ReportUploadForm, AdminUserForm, RequestAccessForm, GrantAccessForm, CreateGroupForm, EditReportForm, AddToFolderForm, ChangeFolderNameForm, MakeFolderForm, RemoveFromFolderForm, CommentForm, AddReportToGroupForm
 import datetime
 import mimetypes
 from django.core.servers.basehttp import FileWrapper
+from functools import reduce
+from operator import and_, or_
 
 
 #class RequestForm(forms.Form):
@@ -213,7 +215,7 @@ def index(request):
         else: #request method is not POST
             make_folder_form = MakeFolderForm()
 
-        search_form = SearchForm(initial = {"text":"Search for..."})
+        search_form = SearchForm(initial = {"text":"Search for...", "text2":"Search for..."})
         context_dict = {'search_form': search_form, 'reports': reports, 'myreports':myreports, 'groups': mygroups, 'request_groups': request_groups, 'admin_status': is_admin}
 
         context_dict['make_folder_form'] = make_folder_form
@@ -263,29 +265,40 @@ def results(request):
     
     if request.method == 'POST':
         context_dict['as_post'] = True
+        fi = request.POST['search_field']
+        query = request.POST['text']
+        query2 = request.POST['text_2']
+        context_dict['query'] = query
+        context_dict['query2'] = query2
         if request.POST['search_field'] == "authorName":
-            query = request.POST['text']
-            context_dict['query'] = query
             reports = Report.objects.filter(authorName__icontains=query)
         if request.POST['search_field'] == "title":
-            query = request.POST['text']
-            context_dict['query'] = query
             reports = Report.objects.filter(title__icontains=query)
         if request.POST['search_field'] == "shortDesc":
-            query = request.POST['text']
-            context_dict['query'] = query
             reports = Report.objects.filter(shortDesc__icontains=query)
         if request.POST['search_field'] == "locationOfIncident":
-            query = request.POST['text']
-            context_dict['query'] = query
             reports = Report.objects.filter(locationOfIncident__icontains=query)
         if request.POST['search_field'] == "keywords":
-            query = request.POST['text']
-            context_dict['query'] = query
             reports = Report.objects.filter(keywords__icontains=query)
-        context_dict['results'] = reports
+        if request.POST['search_field_2'] == "authorName":
+            reports2 = Report.objects.filter(authorName__icontains=query2)
+        if request.POST['search_field_2'] == "title":
+            reports2 = Report.objects.filter(title__icontains=query2)
+        if request.POST['search_field_2'] == "shortDesc":
+            reports2 = Report.objects.filter(shortDesc__icontains=query2)
+        if request.POST['search_field_2'] == "locationOfIncident":
+            reports2 = Report.objects.filter(locationOfIncident__icontains=query2)
+        if request.POST['search_field_2'] == "keywords":
+            reports2 = Report.objects.filter(keywords__icontains=query2)
+        
+        querysets = [reports, reports2]
+        if request.POST['and_or'] == "and":
+            queried_reports = reduce(and_, querysets[1:], querysets[0])
+        if request.POST['and_or'] == "or":
+            queried_reports = reduce(or_, querysets[1:], querysets[0])
+        context_dict['results'] = queried_reports
     
-    search_form = SearchForm(initial = {"text":"SearchForm"})
+    search_form = SearchForm(initial = {"text":"Search for...", "text_2":"Search for..."})
     context_dict['search_form'] = search_form
     
     return render_to_response('SecureWitness/results.html', context_dict, context)
@@ -607,18 +620,25 @@ def group(request, usergroup):
     userprof = UserProfile.objects.get(user_id=request.user.id)
     context_dict['userID'] = userprof.id
     authIdList = []
-	#collect all of the usernames associated with the author of each comment
+    #collect all of the usernames associated with the author of each comment
     for comment in comments:
         auth = UserProfile.objects.get(id = comment.authorId_id)
         user = User.objects.get(id = auth.user_id)
         username = user.username
         authIdList.append(username) 
     
-	#zip the arrays together so that it is like a dictionary
+    #zip the arrays together so that it is like a dictionary
     context_dict['comments'] = zip(comments, authIdList)
     commentForm = CommentForm()
     context_dict['comment_form'] = commentForm 
     
+    if 'submitLeave' in request.POST:
+        memb = request.user.username
+        membr = User.objects.get(username = memb)
+        g.members.remove(membr)
+        
+        return HttpResponseRedirect(reverse('SecureWitness:index'))    
+
     #context_dict['currUser'] = request.user
     if is_admin:
         if request.method == 'POST':
@@ -727,7 +747,9 @@ def group(request, usergroup):
     context_dict['add_member_form'] = add_member_form
     context_dict['remove_member_form'] = remove_member_form
     
-    return HttpResponse(remove_member_form)
+    #return HttpResponse(remove_member_form)
+    if authorId in members:
+        context_dict['leave_group_form'] = leave_group_form
 
     return render_to_response('SecureWitness/group.html', context_dict, context)
 

@@ -16,8 +16,15 @@
      <!-- /input-group -->
           <form id="search_form" method="post" action="/SecureWitness/results/" enctype="multipart/form-data">
 	    {% csrf_token %}
-    	{{ search_form.as_table }}
+    	<!--{{ search_form.as_table }}-->
+		
+		<table id = "search fields">
+			<th> Search Field 1 </th> <th> </th> <th> Search Field 2 </th>
+			<tr> <td> {{search_form.search_field }}</td> <td> {{search_form.and_or}} </td> <td> {{search_form.search_field_2}} </td></tr>
+			<tr> <td> {{search_form.text}} </td> <td> </td> <td> {{search_form.text_2}} </td> </tr>
+		</table>
 	    <input type="submit" class="btn" name="submitSearch" value="Go" />
+		
          </form>
 
     

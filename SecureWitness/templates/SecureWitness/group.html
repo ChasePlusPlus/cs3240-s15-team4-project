@@ -83,6 +83,7 @@
 				{% if userID == comment.authorId_id %}
 					
 					<h5> From <a href = "/SecureWitness/userportal/{{username}}">me:</a> </h5>
+					<h5> Posted: {{comment.timestamp}} </h5>
 				{% else %}
 					<h5> From <a href = "/SecureWitness/userportal/{{username}}">{{comment.authorName}}:</a></h5>
 				{% endif %}

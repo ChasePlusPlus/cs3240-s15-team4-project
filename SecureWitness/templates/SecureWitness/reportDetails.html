@@ -25,24 +25,24 @@
 				<h1>{{report.title}}</h1>
 			</center>
 		</div>
-			Author: {{report.authorName}} </br>
-        	Upload Date: {{report.timestamp}} </br>
-			Subject: {{report.shortDesc}} </br>
-			Description: {{report.detailsDesc}} </br>
+			<b> Author: </b>{{report.authorName}} </br>
+        	<b> Upload Date: </b> {{report.timestamp}} </br>
+			<b> Subject: </b> {{report.shortDesc}} </br>
+			<b> Description: </b> {{report.detailsDesc}} </br>
 			{% if report.dateOfIncident %}
-			    Incident Date: {{report.dateOfIncident}}</br>
+			    <b> Incident Date: </b> {{report.dateOfIncident}}</br>
 			{% endif %}
 			{% if report.locationOfIncident %}
-			    Location: {{report.locationOfIncident}}</br>
+			    <b> Location: </b>{{report.locationOfIncident}}</br>
 			{% endif %}
 			{% if report.keywords %}
-				Keywords: {{report.keywords}}</br>
+				<b> Keywords: </b> {{report.keywords}}</br>
 			{% endif %}
 			
         
     	
         {% if files %}
-				Files: 
+				<b> Files: </b>
 				{% for file in files %}
 				    <a href="/SecureWitness/download/{{file.id}}"> {{file.file}}</a></br>
 				{% endfor %}

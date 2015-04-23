@@ -78,3 +78,4 @@ class Comments(models.Model):
     comment = models.TextField(default='', blank=True)
     authorId = models.ForeignKey(UserProfile, blank=True)
     authorName = models.CharField(max_length = 30, default = '', blank = True)
+    timestamp = models.TextField(default='', blank=True)

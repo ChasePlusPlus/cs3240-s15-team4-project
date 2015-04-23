@@ -4,7 +4,7 @@ section{
 	width: 50%;
 }
 aside{
-	float: right;
-	
-	width: 50%;
+	display: inline-block;
+	vertical-align: top;
+	width: 30%;
 }

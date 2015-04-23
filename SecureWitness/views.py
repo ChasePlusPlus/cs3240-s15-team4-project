@@ -215,7 +215,7 @@ def index(request):
         else: #request method is not POST
             make_folder_form = MakeFolderForm()
 
-        search_form = SearchForm(initial = {"text":"Search for...", "text2":"Search for..."})
+        search_form = SearchForm(initial = {"text":"Search for...", "text_2":"Search for..."})
         context_dict = {'search_form': search_form, 'reports': reports, 'myreports':myreports, 'groups': mygroups, 'request_groups': request_groups, 'admin_status': is_admin}
 
         context_dict['make_folder_form'] = make_folder_form
@@ -400,7 +400,7 @@ def uploadView(request):
             name = request.user.get_full_name()
             titleNoWS = request.POST['title'].rstrip()
             #formattedTitle = titleNoWS.replace(' ', '_')
-            new_Report = Report(authorId = request.user.profile, authorName = name, title = titleNoWS, shortDesc = request.POST['shortDesc'], detailsDesc = request.POST['detailsDesc'], dateOfIncident = request.POST['dateOfIncident'], locationOfIncident = request.POST['locationOfIncident'], keywords = request.POST['keywords'], access_type = request.POST.get('user_perm', False), timestamp = str(datetime.datetime.now()))
+            new_Report = Report(authorId = request.user.profile, authorName = name, title = titleNoWS, shortDesc = request.POST['shortDesc'], detailsDesc = request.POST['detailsDesc'], dateOfIncident = request.POST['dateOfIncident'], locationOfIncident = request.POST['locationOfIncident'], keywords = request.POST['keywords'], access_type = request.POST.get('user_perm', False), timestamp = str(datetime.datetime.now().strftime("%A, %d. %B %Y %I:%M%p")))
             new_Report.save()
 
             if 'submit' in request.POST:			
@@ -412,7 +412,7 @@ def uploadView(request):
                 return HttpResponseRedirect(reverse('SecureWitness:FileUpload', args=(new_Report.id,)))
         else:
 			#If there is an issue with uploading a file let the user know
-            return HttpResponse("Invalid File Upload details... Please be sure you are filling out the appropriate fields.")
+            return HttpResponse("Invalid Report Upload details... Please be sure you are filling out the required fields.")
         
     else:
         form = ReportUploadForm()
@@ -846,6 +846,7 @@ def editReport(request, reportID):
             reportSelected.locationOfIncident = request.POST['locationOfIncident']
             reportSelected.keywords = request.POST['keywords']
             reportSelected.access_type = request.POST.get('user_perm', False)
+            reportSelected.timestamp = datetime.datetime.now().strftime("%A, %d. %B %Y %I:%M%p")
             reportSelected.save(force_update = True)
 			
             if 'addFile' in request.POST:
@@ -875,7 +876,7 @@ def copyReport(request, reportID):
     context = RequestContext(request)
     #reportTitle2 = reportTitle.replace("_", " ")
     reportSelected = Report.objects.get(id = reportID)
-    copyOfReport = Report(authorId = reportSelected.authorId, authorName = reportSelected.authorName, title = reportSelected.title + "(copy)", shortDesc = reportSelected.shortDesc, detailsDesc = reportSelected.detailsDesc, dateOfIncident = reportSelected.dateOfIncident, locationOfIncident = reportSelected.locationOfIncident, keywords = reportSelected.keywords, access_type = reportSelected.access_type, timestamp = str(datetime.datetime.now()))
+    copyOfReport = Report(authorId = reportSelected.authorId, authorName = reportSelected.authorName, title = reportSelected.title + "(copy)", shortDesc = reportSelected.shortDesc, detailsDesc = reportSelected.detailsDesc, dateOfIncident = reportSelected.dateOfIncident, locationOfIncident = reportSelected.locationOfIncident, keywords = reportSelected.keywords, access_type = reportSelected.access_type, timestamp = str(datetime.datetime.now().strftime("%A, %d. %B %Y %I:%M%p")))
     copyOfReport.save()
     reportUploaded = Report.objects.get(id = copyOfReport.id)
     filesOfReport = File.objects.filter(report_id = reportID)
@@ -936,7 +937,7 @@ def groupComment(request, usergroup):
         #return HttpResponse(request.user.id)
         #userProfile = request.user.profile
         userprof = UserProfile.objects.get(user_id=request.user.id)
-        newComment = Comments(comment = request.POST['comment'], groupId_id = usergroup, authorId_id = userprof.id, authorName = request.user.get_full_name() )
+        newComment = Comments(comment = request.POST['comment'], groupId_id = usergroup, authorId_id = userprof.id, authorName = request.user.get_full_name(), timestamp = str(datetime.datetime.now().strftime("%A, %d. %B %Y %I:%M%p")) )
         newComment.save()
     #return HttpResponse(usergroup)
 	#return HttpResponseRedirect(reverse('SecureWitness:group'))

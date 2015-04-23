@@ -10,7 +10,7 @@ https://docs.djangoproject.com/en/1.7/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
-#import dj_database_url
+import dj_database_url
 
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
@@ -74,8 +74,8 @@ DATABASES = {
          #'PORT': '5432',
     }
 }
-#if os.getcwd() == "/app":
- #   DATABASES['default'] =  dj_database_url.config(default="postgres://daebabdykgebhb:BdkgL7uYdrMBNx0X5-nNYlbiJr@ec2-54-204-45-126.compute-1.amazonaws.com:5432/d5t6jijl4vcq81")
+if os.getcwd() == "/app":
+    DATABASES['default'] =  dj_database_url.config(default="postgres://daebabdykgebhb:BdkgL7uYdrMBNx0X5-nNYlbiJr@ec2-54-204-45-126.compute-1.amazonaws.com:5432/d5t6jijl4vcq81")
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.7/topics/i18n/
@@ -119,3 +119,11 @@ MEDIA_URL = '/media/'
 AUTH_PROFILE_MODULE = 'SecureWitness.UserProfile'
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'securewitness4@gmail.com'
+EMAIL_HOST_PASSWORD = 'SecWit4jeec'
+EMAIL_USE_TLS = True

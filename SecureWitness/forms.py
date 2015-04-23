@@ -3,6 +3,18 @@ from SecureWitness.models import UserProfile, Request, Group, Report, Folder
 from django.contrib.auth.models import User
 from django.forms import widgets
 
+class EmailForm(forms.Form):
+    
+    def __init__(self, group, *args, **kwargs):
+        super(EmailForm, self).__init__(*args, **kwargs)
+        self.fields['members'] = forms.ChoiceField(
+            choices=[(o, str(o)) for o in group.members.all()])
+        self.fields['subject'] = forms.CharField(required = True)
+        self.fields['message'] = forms.CharField(required = True)
+
+class EmailLinkForm(forms.Form):
+    pass
+
 class LeaveGroupForm(forms.Form):
     pass
 

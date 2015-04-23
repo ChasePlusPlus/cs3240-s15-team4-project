@@ -9,12 +9,13 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
 from SecureWitness.models import File, Group, Report, UserProfile, Request, Folder, Comments
-from SecureWitness.forms import LeaveGroupForm, RestoreUserForm, SuspendUserForm, AddMemberForm, RemoveMemberForm, FileUploadForm, SearchForm, UserForm, UserProfileForm, ReportUploadForm, AdminUserForm, RequestAccessForm, GrantAccessForm, CreateGroupForm, EditReportForm, AddToFolderForm, ChangeFolderNameForm, MakeFolderForm, RemoveFromFolderForm, CommentForm, AddReportToGroupForm
+from SecureWitness.forms import EmailLinkForm, EmailForm, LeaveGroupForm, RestoreUserForm, SuspendUserForm, AddMemberForm, RemoveMemberForm, FileUploadForm, SearchForm, UserForm, UserProfileForm, ReportUploadForm, AdminUserForm, RequestAccessForm, GrantAccessForm, CreateGroupForm, EditReportForm, AddToFolderForm, ChangeFolderNameForm, MakeFolderForm, RemoveFromFolderForm, CommentForm, AddReportToGroupForm
 import datetime
 import mimetypes
 from django.core.servers.basehttp import FileWrapper
 from functools import reduce
 from operator import and_, or_
+from django.core.mail import send_mail
 
 
 #class RequestForm(forms.Form):
@@ -215,7 +216,7 @@ def index(request):
         else: #request method is not POST
             make_folder_form = MakeFolderForm()
 
-        search_form = SearchForm(initial = {"text":"Search for...", "text2":"Search for..."})
+        search_form = SearchForm(initial = {"text":"Search for...", "text_2":"Search for..."})
         context_dict = {'search_form': search_form, 'reports': reports, 'myreports':myreports, 'groups': mygroups, 'request_groups': request_groups, 'admin_status': is_admin}
 
         context_dict['make_folder_form'] = make_folder_form
@@ -601,6 +602,55 @@ def folder(request, curr_folder):
     context_dict['remove_from_folder_form'] = remove_form
     return render_to_response('SecureWitness/folder.html', context_dict, context)
 
+@login_required
+def email(request, usergroup):
+    context = RequestContext(request)
+    authorId = request.user #gets logged in user
+    userID = request.user.id
+    userprof = UserProfile.objects.get(user_id=userID)
+    is_admin = userprof.admin_status
+    g = Group.objects.get(name=usergroup)
+    context_dict = {'admin_status': is_admin}
+    context_dict['group'] = g
+    members = [val for val in g.members.all() if val in g.members.all()]
+    
+    if authorId in members:
+        context_dict['loggedin'] = 1 #if logged in user is in the group
+    else:
+        context_dict['loggedin'] = 0 #if logged in user is not in the group
+    
+    if 'submitEmail' in request.POST:
+        email_form = EmailForm(g, data=request.POST)
+        if email_form.is_valid:
+            subject = "from " + request.user.username + ": " + request.POST['subject']
+            message = request.POST['message']
+            from_email = 'securewitness4@gmail.com'
+            member = request.POST['members']
+            mem = User.objects.get(username = member)
+            to_email = [mem.email]
+            send_mail(subject, message, from_email, to_email, fail_silently = False)
+            context_dict['email_sent'] = True
+            context_dict['emailed_to'] = member
+        else: #form is not valid
+            print (email_form.errors)
+    if 'submitEmailGroup' in request.POST:
+        email_form = EmailForm(g, data=request.POST)
+        if email_form.is_valid:
+            subject = "from " + request.user.username + ": " + request.POST['subject']
+            message = request.POST['message']
+            from_email = 'securewitness4@gmail.com'
+            to_email = []
+            for mem in members:
+                to_email.append(mem.email)
+            send_mail(subject, message, from_email, to_email, fail_silently = False)
+            context_dict['email_sent'] = True
+            context_dict['emailed_to'] = "all members in " + g.name
+        else: #form is not valid
+            print (email_form.errors)
+    email_form = EmailForm(g)
+    context_dict['email_form'] = email_form
+
+    return render_to_response('SecureWitness/email.html', context_dict, context)
 
 @login_required
 def group(request, usergroup):
@@ -637,7 +687,7 @@ def group(request, usergroup):
         membr = User.objects.get(username = memb)
         g.members.remove(membr)
         
-        return HttpResponseRedirect(reverse('SecureWitness:index'))    
+        return HttpResponseRedirect(reverse('SecureWitness:index'))
 
     #context_dict['currUser'] = request.user
     if is_admin:

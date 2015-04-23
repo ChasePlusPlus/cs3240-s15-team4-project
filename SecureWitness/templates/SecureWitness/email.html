@@ -1,0 +1,32 @@
+{% extends 'SecureWitness/base.html' %}
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>SecureWitness</title>
+  </head>
+
+  <body>
+  <!--<form action="{% url 'SecureWitness:group' %}" method="post">-->
+    {% block body_block %}
+    <div class="hero-unit">
+        <h2>Email Members in {{ group.name }}</h2>
+        {% if email_sent %}
+        Your email to {{ emailed_to }} has been sent.
+        <p><a href="/SecureWitness/group/{{ group.name }}/email/">Send Another Email</a></p>
+        <p><a href="/SecureWitness/group/{{ group.name }}/">Return to Group Page</a></p>
+        {% else %}
+        <form id="email_form" method="post" action="/SecureWitness/group/{{ group.name }}/email/" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ email_form.as_p }}
+            <input type="submit" name="submitEmail" value="Email Member" />
+            <input type="submit" name="submitEmailGroup" value="Email Group" />
+        </form>
+        {% endif %}
+        
+
+    </div>
+    {% endblock %}
+  <!--</form>-->
+  </body>
+</html>

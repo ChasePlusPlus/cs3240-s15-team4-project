@@ -75,7 +75,7 @@ DATABASES = {
     }
 }
 if os.getcwd() == "/app":
-    DATABASES['default'] =  dj_database_url.config(default="postgres://daebabdykgebhb:BdkgL7uYdrMBNx0X5-nNYlbiJr@ec2-54-204-45-126.compute-1.amazonaws.com:5432/d5t6jijl4vcq81")
+   DATABASES['default'] =  dj_database_url.config(default="postgres://daebabdykgebhb:BdkgL7uYdrMBNx0X5-nNYlbiJr@ec2-54-204-45-126.compute-1.amazonaws.com:5432/d5t6jijl4vcq81")
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.7/topics/i18n/

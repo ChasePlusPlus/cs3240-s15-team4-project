@@ -93,6 +93,13 @@ def adminportal(request):
                 user = User.objects.get(id=userID)
                 user.is_active = False
                 user.save()
+                
+                subject = "You have been suspended from SecureWitness."
+                message = "You have been suspended from SecureWitness by admin " + request.user.username + "."
+                from_email = 'securewitness4@gmail.com'
+                to_email = [user.email]
+                send_mail(subject, message, from_email, to_email, fail_silently = False)
+                
                 create_group_form = CreateGroupForm()
                 admin_user_form = AdminUserForm()
                 suspend_user_form = SuspendUserForm()
@@ -106,6 +113,13 @@ def adminportal(request):
                 user = User.objects.get(id=userID)
                 user.is_active = True
                 user.save()
+                
+                subject = "You have been restored to SecureWitness."
+                message = "You have been restored to SecureWitness by admin " + request.user.username + "."
+                from_email = 'securewitness4@gmail.com'
+                to_email = [user.email]
+                send_mail(subject, message, from_email, to_email, fail_silently = False)
+                
                 create_group_form = CreateGroupForm()
                 admin_user_form = AdminUserForm()
                 suspend_user_form = SuspendUserForm()
@@ -291,11 +305,16 @@ def results(request):
             reports2 = Report.objects.filter(locationOfIncident__icontains=query2)
         if request.POST['search_field_2'] == "keywords":
             reports2 = Report.objects.filter(keywords__icontains=query2)
-        
-        querysets = [reports, reports2]
+            
         if request.POST['and_or'] == "and":
+            querysets = [reports, reports2]
             queried_reports = reduce(and_, querysets[1:], querysets[0])
         if request.POST['and_or'] == "or":
+            if request.POST['text'].strip() == "":
+                reports = []
+            if request.POST['text_2'].strip() == "":
+                reports2 = []
+            querysets = [reports, reports2]
             queried_reports = reduce(or_, querysets[1:], querysets[0])
         context_dict['results'] = queried_reports
     
@@ -468,6 +487,11 @@ def user_portal(request, curr_user):
                 #now to delete the request
                 delete_request = Request.objects.get(requester=curr_user, group=group)
                 delete_request.delete()
+                subject = "You have been granted access to " + group.name + "."
+                message = "You have been granted access to " + group.name + " by " + request.user.username + "."
+                from_email = 'securewitness4@gmail.com'
+                to_email = [add_user.email]
+                send_mail(subject, message, from_email, to_email, fail_silently = False)
 
                 context_dict['no_auth'] = no_auth
             else:
@@ -701,6 +725,11 @@ def group(request, usergroup):
                     r = Request.objects.filter(requester = m, group = g)
                     for req in r:
                         req.delete()
+                    subject = "You have been granted access to " + group.name + "."
+                    message = "You have been granted access to " + group.name + " by admin " + request.user.username + "."
+                    from_email = 'securewitness4@gmail.com'
+                    to_email = [mem.email]
+                    send_mail(subject, message, from_email, to_email, fail_silently = False)
                 else: #form is not valid
                     print (add_member_form.errors)
             if 'submitRemove' in request.POST:
@@ -709,6 +738,11 @@ def group(request, usergroup):
                     m = request.POST['members']
                     mem = User.objects.get(username = m)
                     g.members.remove(mem)
+                    subject = "You have been removed from " + group.name + "."
+                    message = "You have been removed from " + group.name + " by admin " + request.user.username + "."
+                    from_email = 'securewitness4@gmail.com'
+                    to_email = [mem.email]
+                    send_mail(subject, message, from_email, to_email, fail_silently = False)
                 else:
                     print(remove_member_form.errors)
         else: #request method is not POST

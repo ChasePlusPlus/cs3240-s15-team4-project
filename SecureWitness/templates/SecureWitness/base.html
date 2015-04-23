@@ -53,9 +53,10 @@
               {% endif %}
 	      <li><a href="/SecureWitness/userportal/{{ user }}">User Portal</a></li>
 	      <li><a href="/SecureWitness/upload/">Upload</a></li>
-	      <li><a href="/SecureWitness/settings/">Settings</a></li>
               {% endif %}
 	    </ul>
+            {% block side_block %}
+            {% endblock %}
           </div>
           <!--/.well -->
         </div>

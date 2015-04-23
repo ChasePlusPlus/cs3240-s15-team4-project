@@ -9,12 +9,13 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
 from SecureWitness.models import File, Group, Report, UserProfile, Request, Folder, Comments
-from SecureWitness.forms import LeaveGroupForm, RestoreUserForm, SuspendUserForm, AddMemberForm, RemoveMemberForm, FileUploadForm, SearchForm, UserForm, UserProfileForm, ReportUploadForm, AdminUserForm, RequestAccessForm, GrantAccessForm, CreateGroupForm, EditReportForm, AddToFolderForm, ChangeFolderNameForm, MakeFolderForm, RemoveFromFolderForm, CommentForm, AddReportToGroupForm
+from SecureWitness.forms import EmailLinkForm, EmailForm, LeaveGroupForm, RestoreUserForm, SuspendUserForm, AddMemberForm, RemoveMemberForm, FileUploadForm, SearchForm, UserForm, UserProfileForm, ReportUploadForm, AdminUserForm, RequestAccessForm, GrantAccessForm, CreateGroupForm, EditReportForm, AddToFolderForm, ChangeFolderNameForm, MakeFolderForm, RemoveFromFolderForm, CommentForm, AddReportToGroupForm
 import datetime
 import mimetypes
 from django.core.servers.basehttp import FileWrapper
 from functools import reduce
 from operator import and_, or_
+from django.core.mail import send_mail
 
 
 #class RequestForm(forms.Form):
@@ -92,6 +93,13 @@ def adminportal(request):
                 user = User.objects.get(id=userID)
                 user.is_active = False
                 user.save()
+                
+                subject = "You have been suspended from SecureWitness."
+                message = "You have been suspended from SecureWitness by admin " + request.user.username + "."
+                from_email = 'securewitness4@gmail.com'
+                to_email = [user.email]
+                send_mail(subject, message, from_email, to_email, fail_silently = False)
+                
                 create_group_form = CreateGroupForm()
                 admin_user_form = AdminUserForm()
                 suspend_user_form = SuspendUserForm()
@@ -105,6 +113,13 @@ def adminportal(request):
                 user = User.objects.get(id=userID)
                 user.is_active = True
                 user.save()
+                
+                subject = "You have been restored to SecureWitness."
+                message = "You have been restored to SecureWitness by admin " + request.user.username + "."
+                from_email = 'securewitness4@gmail.com'
+                to_email = [user.email]
+                send_mail(subject, message, from_email, to_email, fail_silently = False)
+                
                 create_group_form = CreateGroupForm()
                 admin_user_form = AdminUserForm()
                 suspend_user_form = SuspendUserForm()
@@ -290,11 +305,16 @@ def results(request):
             reports2 = Report.objects.filter(locationOfIncident__icontains=query2)
         if request.POST['search_field_2'] == "keywords":
             reports2 = Report.objects.filter(keywords__icontains=query2)
-        
-        querysets = [reports, reports2]
+            
         if request.POST['and_or'] == "and":
+            querysets = [reports, reports2]
             queried_reports = reduce(and_, querysets[1:], querysets[0])
         if request.POST['and_or'] == "or":
+            if request.POST['text'].strip() == "":
+                reports = []
+            if request.POST['text_2'].strip() == "":
+                reports2 = []
+            querysets = [reports, reports2]
             queried_reports = reduce(or_, querysets[1:], querysets[0])
         context_dict['results'] = queried_reports
     
@@ -467,6 +487,11 @@ def user_portal(request, curr_user):
                 #now to delete the request
                 delete_request = Request.objects.get(requester=curr_user, group=group)
                 delete_request.delete()
+                subject = "You have been granted access to " + group.name + "."
+                message = "You have been granted access to " + group.name + " by " + request.user.username + "."
+                from_email = 'securewitness4@gmail.com'
+                to_email = [add_user.email]
+                send_mail(subject, message, from_email, to_email, fail_silently = False)
 
                 context_dict['no_auth'] = no_auth
             else:
@@ -601,6 +626,55 @@ def folder(request, curr_folder):
     context_dict['remove_from_folder_form'] = remove_form
     return render_to_response('SecureWitness/folder.html', context_dict, context)
 
+@login_required
+def email(request, usergroup):
+    context = RequestContext(request)
+    authorId = request.user #gets logged in user
+    userID = request.user.id
+    userprof = UserProfile.objects.get(user_id=userID)
+    is_admin = userprof.admin_status
+    g = Group.objects.get(name=usergroup)
+    context_dict = {'admin_status': is_admin}
+    context_dict['group'] = g
+    members = [val for val in g.members.all() if val in g.members.all()]
+    
+    if authorId in members:
+        context_dict['loggedin'] = 1 #if logged in user is in the group
+    else:
+        context_dict['loggedin'] = 0 #if logged in user is not in the group
+    
+    if 'submitEmail' in request.POST:
+        email_form = EmailForm(g, data=request.POST)
+        if email_form.is_valid:
+            subject = "from " + request.user.username + ": " + request.POST['subject']
+            message = request.POST['message']
+            from_email = 'securewitness4@gmail.com'
+            member = request.POST['members']
+            mem = User.objects.get(username = member)
+            to_email = [mem.email]
+            send_mail(subject, message, from_email, to_email, fail_silently = False)
+            context_dict['email_sent'] = True
+            context_dict['emailed_to'] = member
+        else: #form is not valid
+            print (email_form.errors)
+    if 'submitEmailGroup' in request.POST:
+        email_form = EmailForm(g, data=request.POST)
+        if email_form.is_valid:
+            subject = "from " + request.user.username + ": " + request.POST['subject']
+            message = request.POST['message']
+            from_email = 'securewitness4@gmail.com'
+            to_email = []
+            for mem in members:
+                to_email.append(mem.email)
+            send_mail(subject, message, from_email, to_email, fail_silently = False)
+            context_dict['email_sent'] = True
+            context_dict['emailed_to'] = "all members in " + g.name
+        else: #form is not valid
+            print (email_form.errors)
+    email_form = EmailForm(g)
+    context_dict['email_form'] = email_form
+
+    return render_to_response('SecureWitness/email.html', context_dict, context)
 
 @login_required
 def group(request, usergroup):
@@ -637,7 +711,7 @@ def group(request, usergroup):
         membr = User.objects.get(username = memb)
         g.members.remove(membr)
         
-        return HttpResponseRedirect(reverse('SecureWitness:index'))    
+        return HttpResponseRedirect(reverse('SecureWitness:index'))
 
     #context_dict['currUser'] = request.user
     if is_admin:
@@ -651,6 +725,11 @@ def group(request, usergroup):
                     r = Request.objects.filter(requester = m, group = g)
                     for req in r:
                         req.delete()
+                    subject = "You have been granted access to " + group.name + "."
+                    message = "You have been granted access to " + group.name + " by admin " + request.user.username + "."
+                    from_email = 'securewitness4@gmail.com'
+                    to_email = [mem.email]
+                    send_mail(subject, message, from_email, to_email, fail_silently = False)
                 else: #form is not valid
                     print (add_member_form.errors)
             if 'submitRemove' in request.POST:
@@ -659,6 +738,11 @@ def group(request, usergroup):
                     m = request.POST['members']
                     mem = User.objects.get(username = m)
                     g.members.remove(mem)
+                    subject = "You have been removed from " + group.name + "."
+                    message = "You have been removed from " + group.name + " by admin " + request.user.username + "."
+                    from_email = 'securewitness4@gmail.com'
+                    to_email = [mem.email]
+                    send_mail(subject, message, from_email, to_email, fail_silently = False)
                 else:
                     print(remove_member_form.errors)
         else: #request method is not POST

@@ -75,7 +75,8 @@ DATABASES = {
     }
 }
 if os.getcwd() == "/app":
-   DATABASES['default'] =  dj_database_url.config(default= "postgres://dlquettzmlpfkh:1EzVTPZJ9ejz1rPZNylm1BYElP@ec2-54-243-187-196.compute-1.amazonaws.com:5432/dfuh9elqbffc21HEROKU_POSTGRESQL_MAUVE_URL: @ref:dreaming-quickly-1290:url")
+   DATABASES['default'] =  dj_database_url.config(default= "postgres://kljtufnjnrwrru:ApLM5ETyaMvPiDSinQ1mMRYXR9@ec2-54-163-238-96.compute-1.amazonaws.com:5432/d55bnfifck954d"
+	#HEROKU_POSTGRESQL_BRONZE_URL: @ref:thinking-deeply-3869:url
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.7/topics/i18n/

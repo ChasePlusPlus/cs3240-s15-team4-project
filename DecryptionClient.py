@@ -18,6 +18,7 @@ fileName = input("filename: ")
 fileDec = fileName + ".dec"
 # fileName += ".enc"
 key = input("key: ")
+
 while len(key) < 16:
     key += '0'
 iv = input("IV: ")

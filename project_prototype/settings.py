@@ -77,6 +77,7 @@ DATABASES = {
 
 if os.getcwd() == "/app":
    DATABASES['default'] =  dj_database_url.config(default= "postgres://kljtufnjnrwrru:ApLM5ETyaMvPiDSinQ1mMRYXR9@ec2-54-163-238-96.compute-1.amazonaws.com:5432/d55bnfifck954d")
+   #"postgres://kljtufnjnrwrru:ApLM5ETyaMvPiDSinQ1mMRYXR9@ec2-54-163-238-96.compute-1.amazonaws.com:5432/d55bnfifck954d")
 	#HEROKU_POSTGRESQL_BRONZE_URL: @ref:thinking-deeply-3869:url
 # =======
 # # if os.getcwd() == "/app":

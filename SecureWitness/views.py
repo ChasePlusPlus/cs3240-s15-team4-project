@@ -904,28 +904,38 @@ def FileUpload(request, reportID):
             # uploadContent = fileUploaded.read()
             filename = fileUploaded.name
             # uploadPath = file_full_path = "/tmp/{0}".format(filename)+".upload"
-            iv = "IMMEDIAT"
-            key = reportSelected.dechunker
-            des3 = DES3.new(key, DES3.MODE_CFB, iv)
-            fileEnc = filename + ".enc"
 
-            with open("media/" + fileEnc, 'wb') as fileEncoded:
-                for chunk in fileUploaded.chunks(8192):
-                    if len(chunk) == 0:
-                        break
-                    elif len(chunk) % 16 != 0:
-                        chunk += (' ' * (16 - len(chunk) % 16)).encode()
-                        fileEncoded.write(des3.encrypt(chunk))
-                    else:
-                        fileEncoded.write(des3.encrypt(chunk))
-                    fileEncoded.seek(0)
+            #if reportSelected.access_type:
+            if reportSelected.dechunker != "0000000000000000":
+                iv = "IMMEDIAT"
+                key = reportSelected.dechunker
+                des3 = DES3.new(key, DES3.MODE_CFB, iv)
+                fileEnc = filename + ".enc"
 
-            mimetypes.init()
-            mimeType = mimetypes.guess_type(fileUploaded.name)
-            fileTypeString = mimeType[0]
-            newFile = File(file = fileEnc, report = reportSelected, fileType = fileTypeString)
+                with open("media/" + fileEnc, 'wb') as fileEncoded:
+                    for chunk in fileUploaded.chunks(8192):
+                        if len(chunk) == 0:
+                            break
+                        elif len(chunk) % 16 != 0:
+                            chunk += (' ' * (16 - len(chunk) % 16)).encode()
+                            fileEncoded.write(des3.encrypt(chunk))
+                        else:
+                            fileEncoded.write(des3.encrypt(chunk))
+                        fileEncoded.seek(0)
 
-            newFile.save()
+                mimetypes.init()
+                mimeType = mimetypes.guess_type(fileUploaded.name)
+                fileTypeString = mimeType[0]
+                newFile = File(file = fileEnc, report = reportSelected, fileType = fileTypeString)
+
+                newFile.save()
+
+            else:
+                mimetypes.init()
+                mimeType = mimetypes.guess_type(fileUploaded.name)
+                fileTypeString = mimeType[0]
+                newFile = File(file = fileUploaded, report=reportSelected, fileType=fileTypeString)
+                newFile.save()
         # if 'done then return to index page
             if 'done' in request.POST:
                 #return HttpResponse("DONE")
@@ -1034,7 +1044,8 @@ def download(request, fileID):
     # get filename
     file = File.objects.get(id = fileID)
     report = file.report
-    # report = Report.objects.get(id = reportId)
+    #reportassc = Report.objects.get(id = report)
+    #if report.access_type:
     filename = file.file.name
     dechunker = report.dechunker # grabbing the key
     iv = report.iv  # stored immediate
@@ -1045,14 +1056,19 @@ def download(request, fileID):
     # f = file.file.open('rb')
     # wrapper = FileWrapper(f)
     # email here for decryption key if user_perm is true:
-    to_email = [request.user.email]
-    send_mail((report.title + " decryption key"), 'key: ' + dechunker + " iv= " + iv, 'securewitness4@gmail.com', to_email, fail_silently=False)
+    if report.dechunker != "0000000000000000":
+        to_email = [request.user.email]
+        send_mail((report.title + " decryption key"), 'key: ' + dechunker + " iv= " + iv, 'securewitness4@gmail.com', to_email, fail_silently=False)
     file.file.seek(0)
     wrapper = FileWrapper(file.file)
     response = HttpResponse(wrapper, content_type= type)
 
     # concatenate filename with this
     response['Content-Disposition'] = 'attachment; filename=' + filename;
+   # else:
+   #     file.file.seek(0)
+   #     wrapper = FileWrapper(file.file)
+   #     response = HttpResponse(wrapper, content_type= type)
 
     return response
 

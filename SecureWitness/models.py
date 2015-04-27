@@ -66,7 +66,8 @@ class Report(models.Model):
 
 
 class File(models.Model):
-    file = models.FileField(upload_to='SecureWitness/', blank=True, default = "", null = True)
+    file = models.FileField(upload_to='', blank=True, default = "", null = True)
+    #file = models.FileField(upload_to='SecureWitness/', blank=True, default = "", null = True)
     report = models.ForeignKey(Report)
     fileType = models.CharField(default = '', max_length=200)
 

@@ -84,7 +84,8 @@ class ReportUploadForm(forms.Form):
     locationOfIncident = forms.CharField(required = False)#these do not need to be populated
     keywords = forms.CharField(required = False)#these do not need to be populated
     user_perm = forms.BooleanField(required = False)
-    dechunker = forms.CharField(required=user_perm) # key storage
+    #dechunker = forms.CharField(required=user_perm) # key storage
+    dechunker = forms.CharField(required=False) # key storage
     iv = forms.CharField(required=False) # immediate value
 
 

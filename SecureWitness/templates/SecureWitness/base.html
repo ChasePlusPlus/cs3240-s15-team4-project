@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-{% load static %}
+{% load staticfiles %}
 <html>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Bootstrap -->
-    <link href="{% static 'css/bootstrap-fluid-adj.css' %}" rel="stylesheet">
-    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet" media="screen">
-    <link href="{% static 'css/bootstrap-responsive.css' %}" rel="stylesheet">
-	<link href="{% static 'css/SecureWitnessStyle.css' %}" rel="stylesheet">
+    <link href="{% staticfiles 'css/bootstrap-fluid-adj.css' %}" rel="stylesheet">
+    <link href="{% staticfiles 'css/bootstrap.min.css' %}" rel="stylesheet" media="screen">
+    <link href="{% staticfiles 'css/bootstrap-responsive.css' %}" rel="stylesheet">
+	<link href="{% staticfiles 'css/SecureWitnessStyle.css' %}" rel="stylesheet">
 
     <title>SecureWitness - {% block title %}Something Something Something!{% endblock %}</title>
   </head>

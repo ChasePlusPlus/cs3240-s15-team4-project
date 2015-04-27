@@ -15,7 +15,12 @@ def decrypt_file(in_filename, out_filename, chunk_size, key, iv):
 
 # make a file selection option
 fileName = input("filename: ")
-fileDec = fileName + ".dec"
+length = len(fileName)
+fileType = fileName[(length - 9): (length-4)]
+if fileType == ".docx":
+    fileDec = fileName[0:(length - 9)] + "DEC" + ".docx"
+else:
+    fileDec = fileName + ".dec"
 # fileName += ".enc"
 key = input("key: ")
 
@@ -23,8 +28,10 @@ while len(key) < 16:
     key += '0'
 iv = input("IV: ")
 
-with open(fileName, 'rb') as f:
-    print('fileName: %s' % f.read())
+# with open(fileName, 'rb') as f:
+   # print('fileName: %s' % f.read())
 decrypt_file(fileName, fileDec, 8192, key, iv)
-with open(fileDec, 'rb') as f:
-    print('fileDec: %s' % f.read())
+# with open(fileDec, 'rb') as f:
+    # print('fileDec: %s' % f.read())
+print("Decrypt Complete!")
+print("File created: " + fileDec)

@@ -863,10 +863,7 @@ def report(request, selectedReport):
     context = RequestContext(request)
     report_list = Report.objects.all()
     context_dict = {'report_list': report_list, 'admin_status': is_admin}
-	#need to get rid of extra space AND encode url
-    #titleRequest = selectedReport.replace('_', ' ')
-	#context_dict['titleVal'] = titleRequest
-    #selectedReport2 = selectedReport.replace("_"," ")
+
     report = Report.objects.get(id=selectedReport)
     context_dict['report'] = report
     if request.user.get_full_name() == report.authorName:
@@ -877,9 +874,7 @@ def report(request, selectedReport):
     #get files associated with report
     files = File.objects.filter(report_id = selectedReport)
     context_dict['files'] = files
-  
 
-    	
     return render_to_response('SecureWitness/reportDetails.html', context_dict, context)
 
 

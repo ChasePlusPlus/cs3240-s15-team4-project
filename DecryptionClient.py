@@ -15,6 +15,7 @@ def decrypt_file(in_filename, out_filename, chunk_size, key, iv):
 
 # make a file selection option
 fileName = input("filename: ")
+length = len(fileName)
 fileDec = fileName + ".dec"
 # fileName += ".enc"
 key = input("key: ")

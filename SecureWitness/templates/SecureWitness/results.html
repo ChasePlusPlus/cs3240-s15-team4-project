@@ -19,14 +19,14 @@
       </form>
       
       {% if as_post %}
-      You searched for: {{ query }}
+      You searched for: "{{ query }}" in <u>{{ f1 }}</u> {{ andor }} "{{ query2 }}" in <u>{{ f2 }}</u>
       
       {% if results %}
       {% for report in results %}
       <ul>
         <li><a href="/SecureWitness/report/{{report.id}}">{{ report.title }}</a></li>
-        {% endfor %}
       </ul>
+      {% endfor %}
       {% else %}
         <p>No results found.</p>
       {% endif %}

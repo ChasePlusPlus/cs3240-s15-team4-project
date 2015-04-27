@@ -15,6 +15,7 @@ import mimetypes
 from django.core.servers.basehttp import FileWrapper
 from functools import reduce
 from operator import and_, or_
+from Crypto.Cipher import DES3
 from django.core.mail import send_mail
 
 
@@ -173,13 +174,13 @@ def index(request):
         for report in reportIdList:
             q5 = Report.objects.filter(id = report).exclude(authorId_id = authId)
             reports = reports | q5
-        #return HttpResponse(reports)
-        #get all the groups saved that the member is not a part of	
+        # return HttpResponse(reports)
+        # get all the groups saved that the member is not a part of
         notMyGroups = Group.members.through.objects.exclude(user_id = userid).values_list('group_id', flat=True).distinct()
         request_groups = []
         
-        #check to make sure that the groups chosen are not those the user is in (the way the table is set up is every user has own row with table name
-        #meaning that groups with the user can still be chosen when another user in same group)
+        # check to make sure that the groups chosen are not those the user is in (the way the table is set up is every user has own row with table name
+        # meaning that groups with the user can still be chosen when another user in same group)
         for group in notMyGroups:
             if group not in mygroups:
                 request_groups.append(group)
@@ -195,12 +196,12 @@ def index(request):
                         user.save()
                         admin_user_form = AdminUserForm()
 
-                    else: #form is not valid
+                    else: # form is not valid
                         print (admin_user_form.errors)
-                else: #request method is not POST ####new addition
+                else: # request method is not POST ####new addition
                     admin_user_form = AdminUserForm()
 
-            else: #request method is not POST
+            else: # request method is not POST
                 admin_user_form = AdminUserForm()
             all_reports = Report.objects.all()
             all_groups = Group.objects.all()
@@ -209,12 +210,12 @@ def index(request):
                             'groups': mygroups, 'admin_user_form': admin_user_form, 'admin_status': is_admin,
                             'current_user': request.user.username}
             
-        else: #user is not admin
+        else: # user is not admin
            
             context_dict = {'reports': reports, 'myreports': myreports, 'groups': mygroups, 'request_groups': request_groups,
                             'current_user': request.user.username}
-            #return HttpResponse(context_dict['myreports'])
-        #NEW CODE for folder creation not yet tested
+            # return HttpResponse(context_dict['myreports'])
+        # NEW CODE for folder creation not yet tested
         if request.method == 'POST':
             if 'submit_make_folder' in request.POST:
                 make_folder_form = MakeFolderForm(data=request.POST)
@@ -223,11 +224,11 @@ def index(request):
                     new_folder = Folder(name=foldername, owner=request.user)
                     new_folder.save()
 
-                else: #form is not valid
+                else: # form is not valid
                     print (make_folder_form.errors)
-            else: #request method is not POST
+            else: # request method is not POST
                 make_folder_form = MakeFolderForm()
-        else: #request method is not POST
+        else: # request method is not POST
             make_folder_form = MakeFolderForm()
 
         search_form = SearchForm(initial = {"text":"Search for...", "text_2":"Search for..."})
@@ -235,11 +236,11 @@ def index(request):
 
         context_dict['make_folder_form'] = make_folder_form
         my_folders = [val for val in Folder.objects.all() if val.owner == request.user]
-        #my_folders = Folder.objects.all(owner=request.user)
+        # my_folders = Folder.objects.all(owner=request.user)
         context_dict['my_folders'] = my_folders
 
 
-        #add report to group function stuff here
+        # add report to group function stuff here
         if request.method == 'POST':
             if 'submit_add_report_to_group' in request.POST:
                 add_report_form = AddReportToGroupForm(request.user.get_full_name(), userid, data=request.POST)
@@ -253,11 +254,11 @@ def index(request):
                         report.group_perm.add(group)
                         report.save()
 
-                else: #form is not valid
+                else: # form is not valid
                     print (add_report_form.errors)
-            else: #request method is not POST
+            else: # request method is not POST
                 add_report_form = AddReportToGroupForm(request.user.get_full_name(), userid)
-        else: #request method is not POST
+        else: # request method is not POST
             add_report_form = AddReportToGroupForm(request.user.get_full_name(), userid)
 
         context_dict['add_report_to_group_form'] = add_report_form
@@ -420,8 +421,18 @@ def uploadView(request):
             name = request.user.get_full_name()
             titleNoWS = request.POST['title'].rstrip()
             #formattedTitle = titleNoWS.replace(' ', '_')
-            new_Report = Report(authorId = request.user.profile, authorName = name, title = titleNoWS, shortDesc = request.POST['shortDesc'], detailsDesc = request.POST['detailsDesc'], dateOfIncident = request.POST['dateOfIncident'], locationOfIncident = request.POST['locationOfIncident'], keywords = request.POST['keywords'], access_type = request.POST.get('user_perm', False), timestamp = str(datetime.datetime.now().strftime("%A, %d. %B %Y %I:%M%p")))
+
+            # immediate = Random.get_random_bytes(8)
+            immediate = 'IMMEDIAT'
+            key = request.POST['dechunker']
+            while len(key) < 16:
+                key += '0'
+            #hashing the key
+            # key = SHA256.new(key)
+            new_Report = Report(authorId = request.user.profile, authorName = name, title = titleNoWS, shortDesc = request.POST['shortDesc'], detailsDesc = request.POST['detailsDesc'], dateOfIncident = request.POST['dateOfIncident'], locationOfIncident = request.POST['locationOfIncident'], keywords = request.POST['keywords'], access_type = request.POST.get('user_perm', False), dechunker=key, timestamp=str(datetime.datetime.now().strftime("%A, %d. %B %Y %I:%M%p")), iv=immediate)
             new_Report.save()
+
+           # if 'user_perm' in request.POST is True:
 
             if 'submit' in request.POST:			
                 #return HttpResponseRedirect(reverse('SecureWitness:report', args=(new_Report.title,)))
@@ -872,29 +883,55 @@ def report(request, selectedReport):
     return render_to_response('SecureWitness/reportDetails.html', context_dict, context)
 
 
+def encrypt_file(in_filename, out_filename, chunk_size, key, iv):
+    des3 = DES3.new(key, DES3.MODE_CFB, iv)
+
+    with open(in_filename, 'rb') as in_file:
+        with open(out_filename, 'wb') as out_file:
+            while True:
+                chunk = in_file.chunk(chunk_size)
+                if len(chunk) == 0:
+                    break
+                elif len(chunk) % 16 != 0:
+                    chunk += (' ' * (16 - len(chunk) % 16)).encode()
+                out_file.write(des3.encrypt(chunk))
+
+
 @login_required
 def FileUpload(request, reportID):
-	#return HttpResponse(reportTitle)
+    # return HttpResponse(reportTitle)
     if request.method == 'POST':
-        #if form is valid get file info and add to the database
+        # if form is valid get file info and add to the database
         form = FileUploadForm(request.POST, request.FILES)
-        if form.is_valid():            
-            #return HttpResponse("VALID")
-            #reportTitle2 = reportTitle.replace("_", " ")
+        if form.is_valid():
             reportSelected = Report.objects.get(id = reportID)
             fileUploaded = request.FILES['file']
+            # uploadContent = fileUploaded.read()
             filename = fileUploaded.name
-			
-			#guess MimeType and add to model
+            # uploadPath = file_full_path = "/tmp/{0}".format(filename)+".upload"
+            iv = "IMMEDIAT"
+            key = reportSelected.dechunker
+            des3 = DES3.new(key, DES3.MODE_CFB, iv)
+            fileEnc = filename + ".enc"
+
+            with open("media/" + fileEnc, 'wb') as fileEncoded:
+                for chunk in fileUploaded.chunks(8192):
+                    if len(chunk) == 0:
+                        break
+                    elif len(chunk) % 16 != 0:
+                        chunk += (' ' * (16 - len(chunk) % 16)).encode()
+                        fileEncoded.write(des3.encrypt(chunk))
+                    else:
+                        fileEncoded.write(des3.encrypt(chunk))
+                    fileEncoded.seek(0)
+
             mimetypes.init()
             mimeType = mimetypes.guess_type(fileUploaded.name)
             fileTypeString = mimeType[0]
-			
-            newFile = File(file = fileUploaded, report = reportSelected, fileType = fileTypeString)
+            newFile = File(file = fileEnc, report = reportSelected, fileType = fileTypeString)
+
             newFile.save()
-            #newFile.file.name = filename
-            #newFile.save()
-        #if 'done then return to index page
+        # if 'done then return to index page
             if 'done' in request.POST:
                 #return HttpResponse("DONE")
                 return HttpResponseRedirect(reverse('SecureWitness:index'))
@@ -909,20 +946,20 @@ def FileUpload(request, reportID):
         form = FileUploadForm()
         
     data = {'form': form, 'reportID': reportID}
-	#return render(request, 'polls/upload.html', data)
+	# return render(request, 'polls/upload.html', data)
     return render_to_response('SecureWitness/FileUpload.html', data, context_instance=RequestContext(request))
 
 def editReport(request, reportID):
-    #reportTitle2 = reportTitle.replace("_", " ")
+    # reportTitle2 = reportTitle.replace("_", " ")
     reportSelected = Report.objects.get(id = reportID)
-    #reportID = reportSelected.id
+    # reportID = reportSelected.id
 
     if request.method == 'POST':
-		#form that holds the upload file buttons
+		# form that holds the upload file buttons
         form = EditReportForm(request.POST, request.FILES)
         if form.is_valid():
             titleNoWS = request.POST['title'].rstrip()
-            #return HttpResponse(reportSelected.title +" = "+ titleNoWS)
+            # return HttpResponse(reportSelected.title +" = "+ titleNoWS)
             reportSelected.title = titleNoWS
             reportSelected.shortDesc = request.POST['shortDesc']
             reportSelected.detailsDesc = request.POST['detailsDesc']
@@ -932,7 +969,7 @@ def editReport(request, reportID):
             reportSelected.access_type = request.POST.get('user_perm', False)
             reportSelected.timestamp = datetime.datetime.now().strftime("%A, %d. %B %Y %I:%M%p")
             reportSelected.save(force_update = True)
-			
+
             if 'addFile' in request.POST:
                 return HttpResponseRedirect(reverse('SecureWitness:FileUpload', args=(reportSelected.id,)))
             elif 'deleteFile' in request.POST:
@@ -940,7 +977,7 @@ def editReport(request, reportID):
             else:
                 return HttpResponseRedirect(reverse('SecureWitness:index'))
     else:
-	    #insert form values as default to be shown
+        # insert form values as default to be shown
         files = File.objects.filter(report_id = reportID)
         form = EditReportForm(initial = {'title': reportSelected.title, 'shortDesc': reportSelected.shortDesc, 'detailsDesc': reportSelected.detailsDesc, 'dateOfIncident': reportSelected.dateOfIncident, 'locationOfIncident': reportSelected.locationOfIncident, 'keywords': reportSelected.keywords, 'user_perm': reportSelected.user_perm} )
     
@@ -950,15 +987,15 @@ def editReport(request, reportID):
 
 def deleteReport(request, reportID):
     context = RequestContext(request)
-    #reportTitle2 = reportTitle.replace("_", " ")
+    # reportTitle2 = reportTitle.replace("_", " ")
     reportSelected = Report.objects.get(id = reportID).delete()
-	
+
     return HttpResponseRedirect(reverse('SecureWitness:index'))
 
 def copyReport(request, reportID):
-    #return HttpResponse(request.user.profile)
+    # return HttpResponse(request.user.profile)
     context = RequestContext(request)
-    #reportTitle2 = reportTitle.replace("_", " ")
+    # reportTitle2 = reportTitle.replace("_", " ")
     reportSelected = Report.objects.get(id = reportID)
     copyOfReport = Report(authorId = reportSelected.authorId, authorName = reportSelected.authorName, title = reportSelected.title + "(copy)", shortDesc = reportSelected.shortDesc, detailsDesc = reportSelected.detailsDesc, dateOfIncident = reportSelected.dateOfIncident, locationOfIncident = reportSelected.locationOfIncident, keywords = reportSelected.keywords, access_type = reportSelected.access_type, timestamp = str(datetime.datetime.now().strftime("%A, %d. %B %Y %I:%M%p")))
     copyOfReport.save()
@@ -968,7 +1005,7 @@ def copyReport(request, reportID):
     for files in filesOfReport:
         newFile = File(file = files.file, report = reportUploaded, fileType = files.fileType)
         newFile.save()
-	
+
     return HttpResponseRedirect(reverse('SecureWitness:index'))
 
 
@@ -982,47 +1019,55 @@ def deleteFolder(request, folderID):
     return HttpResponseRedirect(reverse('SecureWitness:index'))
 
 def deleteFile(request, reportID):
-    #files = File.objects.filter(report_id = reportID)
+    # files = File.objects.filter(report_id = reportID)
     if request.method == 'POST':
         if 'submit' in request.POST:
-            #form = deleteFilesForm(request.POST, request.FILES)
+            # form = deleteFilesForm(request.POST, request.FILES)
             fileID = request.POST['file']
             deletedFile = File.objects.get(id = fileID).delete()
-            #return HttpResponseRedirect(reverse('SecureWitness:index'))
+            # return HttpResponseRedirect(reverse('SecureWitness:index'))
             return HttpResponseRedirect(reverse('SecureWitness:DeleteFile', args=(reportID,)))
         if 'done' in request.POST:
             return HttpResponseRedirect(reverse('SecureWitness:index'))
     else:
         files = File.objects.filter(report_id = reportID)
-		#form = deleteFilesForm(reportID)
+        # form = deleteFilesForm(reportID)
     context_dict = {'reportID': reportID, 'files':files}
     return render_to_response('SecureWitness/deleteFile.html', context_dict, context_instance=RequestContext(request))
 
 def download(request, fileID):
-    #get filename
+    # get filename
     file = File.objects.get(id = fileID)
+    report = file.report
+    # report = Report.objects.get(id = reportId)
     filename = file.file.name
-    #return HttpResponse(filename)
+    dechunker = report.dechunker # grabbing the key
+    iv = report.iv  # stored immediate
+    # decrypt dechunker and iv:
+    # return HttpResponse(filename)
     type = file.fileType
-    #path = "" # Get file path
-    #f = file.file.open('rb')
-    #wrapper = FileWrapper(f)
+    # path = "" # Get file path
+    # f = file.file.open('rb')
+    # wrapper = FileWrapper(f)
+    # email here for decryption key if user_perm is true:
+    to_email = [request.user.email]
+    send_mail((report.title + " decryption key"), 'key: ' + dechunker + " iv= " + iv, 'securewitness4@gmail.com', to_email, fail_silently=False)
     file.file.seek(0)
     wrapper = FileWrapper(file.file)
     response = HttpResponse(wrapper, content_type= type)
-	
-	#concatenate filename with this
+
+    # concatenate filename with this
     response['Content-Disposition'] = 'attachment; filename=' + filename;
 
     return response
 
 def groupComment(request, usergroup):
     if request.method == 'POST':
-        #return HttpResponse(request.user.id)
-        #userProfile = request.user.profile
+        # return HttpResponse(request.user.id)
+        # userProfile = request.user.profile
         userprof = UserProfile.objects.get(user_id=request.user.id)
         newComment = Comments(comment = request.POST['comment'], groupId_id = usergroup, authorId_id = userprof.id, authorName = request.user.get_full_name(), timestamp = str(datetime.datetime.now().strftime("%A, %d. %B %Y %I:%M%p")) )
         newComment.save()
-    #return HttpResponse(usergroup)
-	#return HttpResponseRedirect(reverse('SecureWitness:group'))
+    # return HttpResponse(usergroup)
+    # return HttpResponseRedirect(reverse('SecureWitness:group'))
     return HttpResponseRedirect(reverse('SecureWitness:group', args = (usergroup,)))

@@ -47,6 +47,8 @@ class Report(models.Model):
     #folder = models.ForeignKey(Folder, blank=True)
     folder = models.IntegerField(default='0', blank=True)
     user_perm = models.TextField(default='', blank=True)
+    dechunker = models.CharField(max_length=256, default='', blank=True) # stores the hashed key
+    iv = models.CharField(max_length=256, default='', blank=True) # stores the hashed immediate value
     group_perm = models.ManyToManyField(Group) #String of groups permitted to access the file
     access_type = models.BooleanField(default=False) #False -> Public file, True -> Private file
     timestamp = models.TextField(default='', blank=True)
@@ -55,8 +57,7 @@ class Report(models.Model):
     dateOfIncident = models.TextField(default='', blank=True, null = True)
     locationOfIncident = models.TextField(default='', blank=True, null = True)
     keywords = models.TextField(default='', blank=True, null = True)
-    
-		
+
     def __str__(self):
         return self.title
 
@@ -68,10 +69,12 @@ class File(models.Model):
     file = models.FileField(upload_to='SecureWitness/', blank=True, default = "", null = True)
     report = models.ForeignKey(Report)
     fileType = models.CharField(default = '', max_length=200)
-    
+
+
 class Key(models.Model):
     file = models.OneToOneField(File, primary_key=True)
     key = models.TextField()
+
 
 class Comments(models.Model):
     groupId = models.ForeignKey(Group)

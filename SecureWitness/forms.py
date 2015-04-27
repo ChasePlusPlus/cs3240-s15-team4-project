@@ -19,7 +19,7 @@ class LeaveGroupForm(forms.Form):
     pass
 
 class RequestAccessForm(forms.Form):
-    #request_access = forms.BooleanField(required=True)
+    # request_access = forms.BooleanField(required=True)
     class Meta:
         model = Request
         fields = ('requester', 'group')
@@ -77,14 +77,17 @@ class AddReportToGroupForm(forms.Form):
 
 class ReportUploadForm(forms.Form):
     title = forms.CharField()
-	#author = forms.CharField()
+	# author = forms.CharField()
     shortDesc = forms.CharField()
     detailsDesc = forms.CharField(widget = forms.Textarea)
     dateOfIncident = forms.CharField(required=False)#these do not need to be populated
     locationOfIncident = forms.CharField(required = False)#these do not need to be populated
     keywords = forms.CharField(required = False)#these do not need to be populated
     user_perm = forms.BooleanField(required = False)
-    
+    dechunker = forms.CharField(required=user_perm) # key storage
+    iv = forms.CharField(required=False) # immediate value
+
+
 class FileUploadForm(forms.Form):
     file = forms.FileField(label = "Select a File", required = False)
     

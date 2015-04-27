@@ -74,9 +74,14 @@ DATABASES = {
          #'PORT': '5432',
     }
 }
+
 if os.getcwd() == "/app":
    DATABASES['default'] =  dj_database_url.config(default= "postgres://kljtufnjnrwrru:ApLM5ETyaMvPiDSinQ1mMRYXR9@ec2-54-163-238-96.compute-1.amazonaws.com:5432/d55bnfifck954d")
 	#HEROKU_POSTGRESQL_BRONZE_URL: @ref:thinking-deeply-3869:url
+# =======
+# # if os.getcwd() == "/app":
+# #     DATABASES['default'] =  dj_database_url.config(default="postgres://daebabdykgebhb:BdkgL7uYdrMBNx0X5-nNYlbiJr@ec2-54-204-45-126.compute-1.amazonaws.com:5432/d5t6jijl4vcq81")
+# >>>>>>> Stashed changes
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.7/topics/i18n/
@@ -118,6 +123,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 
 AUTH_PROFILE_MODULE = 'SecureWitness.UserProfile'
+
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 

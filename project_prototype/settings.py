@@ -115,8 +115,8 @@ STATIC_ROOT = 'staticfiles'
 STATIC_URL = '/static/'
 
 STATICFILES_DIRS = (
-
-    os.path.join(BASE_DIR, 'project_prototype/static'),
+    'static'
+    #os.path.join(BASE_DIR, 'project_prototype/static'),
 )
 
 #Helps determine where to put the uploaded files

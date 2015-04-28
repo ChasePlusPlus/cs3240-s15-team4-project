@@ -76,8 +76,8 @@ DATABASES = {
 }
 
 if os.getcwd() == "/app":
-   DATABASES['default'] =  dj_database_url.config(default= "postgres://kljtufnjnrwrru:ApLM5ETyaMvPiDSinQ1mMRYXR9@ec2-54-163-238-96.compute-1.amazonaws.com:5432/d55bnfifck954d")
-	#HEROKU_POSTGRESQL_BRONZE_URL: @ref:thinking-deeply-3869:url
+   DATABASES['default'] =  dj_database_url.config(default= "postgres://fglfuapozpgloe:u-teZQQ3jolevLq4L9gKYCa0J-@ec2-54-163-238-96.compute-1.amazonaws.com:5432/d98etkvq44eb9e")
+   
 # =======
 # # if os.getcwd() == "/app":
 # #     DATABASES['default'] =  dj_database_url.config(default="postgres://daebabdykgebhb:BdkgL7uYdrMBNx0X5-nNYlbiJr@ec2-54-204-45-126.compute-1.amazonaws.com:5432/d5t6jijl4vcq81")
@@ -102,20 +102,21 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-LOGIN_URL = '/SecureWItness/login/'
+LOGIN_URL = '/SecureWitness/login/'
 
 TEMPLATE_DIRS = (
     os.path.join(BASE_DIR,  'templates'),
 )
 
-STATIC_PATH = os.path.join(PROJECT_PATH, 'static')
+#STATIC_PATH = os.path.join(PROJECT_PATH, 'static')
 
 
 STATIC_ROOT = 'staticfiles'
 STATIC_URL = '/static/'
 
 STATICFILES_DIRS = (
-    STATIC_PATH,
+    'static',
+    #os.path.join(BASE_DIR, 'project_prototype/static'),
 )
 
 #Helps determine where to put the uploaded files

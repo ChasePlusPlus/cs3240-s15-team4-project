@@ -231,7 +231,7 @@ def index(request):
         else: # request method is not POST
             make_folder_form = MakeFolderForm()
 
-        search_form = SearchForm(initial = {"text":"Search for...", "text_2":"Search for..."})
+        search_form = SearchForm()
         context_dict = {'search_form': search_form, 'reports': reports, 'myreports':myreports, 'groups': mygroups, 'request_groups': request_groups, 'admin_status': is_admin}
 
         context_dict['make_folder_form'] = make_folder_form
@@ -281,11 +281,15 @@ def results(request):
     
     if request.method == 'POST':
         context_dict['as_post'] = True
-        fi = request.POST['search_field']
+        context_dict['f1'] = request.POST['search_field']
+        context_dict['f2'] = request.POST['search_field_2']
+        context_dict['andor'] = request.POST['and_or']
         query = request.POST['text']
         query2 = request.POST['text_2']
         context_dict['query'] = query
         context_dict['query2'] = query2
+        report1 = []
+        report2 = []
         if request.POST['search_field'] == "authorName":
             reports = Report.objects.filter(authorName__icontains=query)
         if request.POST['search_field'] == "title":
@@ -295,7 +299,18 @@ def results(request):
         if request.POST['search_field'] == "locationOfIncident":
             reports = Report.objects.filter(locationOfIncident__icontains=query)
         if request.POST['search_field'] == "keywords":
-            reports = Report.objects.filter(keywords__icontains=query)
+            reports = Report.objects.none()
+            r1 = Report.objects.all()
+            kwq1 = request.POST['text'].strip().split()
+            kwqq1 = request.POST['text'].strip().split()
+            for report in r1:
+                kw1 = report.keywords.strip().split()
+                q = Report.objects.get(title = "report")
+                for k1 in kwq1:
+                    if k1 in kw1:
+                        kwqq1.remove(k1)
+                if len(kwqq1) == 0:
+                    report1.append(report)
         if request.POST['search_field_2'] == "authorName":
             reports2 = Report.objects.filter(authorName__icontains=query2)
         if request.POST['search_field_2'] == "title":
@@ -305,21 +320,51 @@ def results(request):
         if request.POST['search_field_2'] == "locationOfIncident":
             reports2 = Report.objects.filter(locationOfIncident__icontains=query2)
         if request.POST['search_field_2'] == "keywords":
-            reports2 = Report.objects.filter(keywords__icontains=query2)
-            
+            reports2 = Report.objects.none()
+            r2 = Report.objects.all()
+            kwq2 = request.POST['text_2'].strip().split()
+            kwqq2 = request.POST['text_2'].strip().split()
+            for report in r2:
+                kw2 = report.keywords.strip().split()
+                for k2 in kwq2:
+                    if k2 in kw2:
+                        kwqq2.remove(k2)
+                if len(kwqq2) == 0:
+                    report2.append(report)
+        for report in reports:
+            report1.append(report)
+        for report in reports2:
+            report2.append(report)
         if request.POST['and_or'] == "and":
-            querysets = [reports, reports2]
-            queried_reports = reduce(and_, querysets[1:], querysets[0])
+            queried_reports = []
+            for report in report1:
+                if report in report2:
+                    if report not in queried_reports:
+                        if report.access_type == False:
+                            queried_reports.append(report)
+            for report in report2:
+                if report in report1:
+                    if report not in queried_reports:
+                        if report.access_type == False:
+                            queried_reports.append(report)      
         if request.POST['and_or'] == "or":
             if request.POST['text'].strip() == "":
-                reports = []
+                report1 = []
             if request.POST['text_2'].strip() == "":
-                reports2 = []
-            querysets = [reports, reports2]
-            queried_reports = reduce(or_, querysets[1:], querysets[0])
+                report2 = []
+            queried_reports = []
+            for report in report1:
+                if report not in queried_reports:
+                    if report.access_type == False:
+                        queried_reports.append(report)
+            for report in report2:
+                if report not in queried_reports:
+                    if report.access_type == False:
+                        queried_reports.append(report)
+            
         context_dict['results'] = queried_reports
     
-    search_form = SearchForm(initial = {"text":"Search for...", "text_2":"Search for..."})
+    search_form = SearchForm()
     context_dict['search_form'] = search_form
     
     return render_to_response('SecureWitness/results.html', context_dict, context)

@@ -150,10 +150,10 @@ class SearchForm(forms.Form):
     ANDOR = (('and', 'AND'), ('or', 'OR'))
     
     search_field = forms.ChoiceField(choices=CHOICES)
-    text = forms.CharField()
+    text = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'Search for...'}))
     and_or = forms.ChoiceField(choices=ANDOR, initial='or')
     search_field_2 = forms.ChoiceField(choices=CHOICES)
-    text_2 = forms.CharField()
+    text_2 = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'Search for...'}))
 
 class SuspendUserForm(forms.Form):
     

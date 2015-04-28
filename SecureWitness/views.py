@@ -305,7 +305,7 @@ def results(request):
             kwqq1 = request.POST['text'].strip().split()
             for report in r1:
                 kw1 = report.keywords.strip().split()
-                q = Report.objects.get(title = "report")
+                #q = Report.objects.get(title = "report")
                 for k1 in kwq1:
                     if k1 in kw1:
                         kwqq1.remove(k1)

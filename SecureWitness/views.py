@@ -781,8 +781,8 @@ def group(request, usergroup):
                     r = Request.objects.filter(requester = m, group = g)
                     for req in r:
                         req.delete()
-                    subject = "You have been granted access to " + group.name + "."
-                    message = "You have been granted access to " + group.name + " by admin " + request.user.username + "."
+                    subject = "You have been granted access to " + g.name + "."
+                    message = "You have been granted access to " + g.name + " by admin " + request.user.username + "."
                     from_email = 'securewitness4@gmail.com'
                     to_email = [mem.email]
                     send_mail(subject, message, from_email, to_email, fail_silently = False)
@@ -794,8 +794,8 @@ def group(request, usergroup):
                     m = request.POST['members']
                     mem = User.objects.get(username = m)
                     g.members.remove(mem)
-                    subject = "You have been removed from " + group.name + "."
-                    message = "You have been removed from " + group.name + " by admin " + request.user.username + "."
+                    subject = "You have been removed from " + g.name + "."
+                    message = "You have been removed from " + g.name + " by admin " + request.user.username + "."
                     from_email = 'securewitness4@gmail.com'
                     to_email = [mem.email]
                     send_mail(subject, message, from_email, to_email, fail_silently = False)
